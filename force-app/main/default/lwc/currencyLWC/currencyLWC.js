@@ -20,8 +20,6 @@ export default class CurrencyLWC extends LightningElement {
         if (name === 'amount') this.enterdAmount = value;
         if (name === 'fromCurrency') this.fromCurr = value;
         if (name === 'toCurrency') this.toCurr = value;
-
-
     }
 
     async fatchSybols() {
@@ -61,10 +59,9 @@ export default class CurrencyLWC extends LightningElement {
         );
 
         this.showOutPut=true;
-
             
         } catch (error) {
-            
+            console.log("Error",error);
         }
        
     }
@@ -74,3 +71,5 @@ export default class CurrencyLWC extends LightningElement {
 // async conversion(){
 //     let conversionEndPoint =`https://api.frankfurter.app/latest?base=${this.fromCurr}&symbols=${toCurr}`
 // }
+
+//stage Changes
