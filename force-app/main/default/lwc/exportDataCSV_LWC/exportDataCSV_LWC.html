@@ -1,0 +1,23 @@
+<template>
+    <lightning-card title="Data to Exporte">
+        <div>
+            <lightning-button 
+            variant="brand" 
+            label="Download CSV File" 
+            title="ExportData" 
+            icon-name="utility:download" 
+            class="slds-m-left_x-small"
+            onclick={clickHindler}
+            disabled={chackRacords}></lightning-button>
+        </div>
+        <div>  <lightning-button label="Get Selected Rows" onclick={handleButtonClick}></lightning-button></div>
+        <lightning-datatable
+        key-field="id" 
+        columns={columns} 
+        data={accountData}   
+        onrowselection={handleRowSelection}  
+        selected-rows={selectedRows}
+        show-row-number-column="true">
+        </lightning-datatable>
+    </lightning-card>
+</template>

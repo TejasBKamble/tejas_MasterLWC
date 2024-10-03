@@ -1,0 +1,49 @@
+<template>
+    <lightning-card title="Currency Convertor">
+
+        <div class="fromatFile slds-var-p-arount_small">
+            <!-- input Ammount -->
+            <lightning-input label="Amount" onchange={currencyHandler} name="amount"></lightning-input>
+        </div>
+
+        <div class="fromatFile slds-var-p-arount_small">
+            <!-- form curency to curency  -->
+            <div class="slds-grid">
+                <div class="slds-col slds-order_2 slds-large-order_1">
+
+                    <lightning-combobox label="From Currency" name="fromCurrency" onchange={currencyHandler}
+                        options={currencyOption}>
+                    </lightning-combobox>
+
+                </div>
+                <div class="slds-col slds-order_1 slds-large-order_2">
+
+                    <lightning-combobox label="To Currency" name="toCurrency" onchange={currencyHandler}
+                        options={currencyOption}>
+                    </lightning-combobox>
+
+                </div>
+            </div>
+
+        </div>
+        <div class="fromatFile slds-var-p-arount_small">
+            <!-- Submit Button -->
+            <lightning-button label="Convert" variant="Brand" onclick={clickHanler}></lightning-button>
+
+        </div>
+        <div class="fromatFile slds-var-p-arount_small">
+            <!-- Out put  -->
+
+            <template lwc:if={showOutPut}>
+                <p>
+                    <lightning-formatted-number value={currencyValue} format-style="currency"
+                        currency-code={toCurr} currency-display-as="name">
+                    </lightning-formatted-number>
+                </p>
+
+              
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

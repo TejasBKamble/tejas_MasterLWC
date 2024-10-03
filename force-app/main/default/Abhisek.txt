@@ -1,0 +1,435 @@
+Parent HTML
+<template>
+    <lightning-card title="Account Collection Header">
+        <lightning-button-group slot="actions">
+            <lightning-button variant="Neutral" label="New" title="New"
+                onclick={clickHandlerNewAccount}></lightning-button>
+            <lightning-button variant="Neutral" label="Edit" title="Edit" onclick={clickHandlerEdit}></lightning-button>
+        </lightning-button-group>
+        <lightning-tabset>
+            <lightning-tab label="Account Details" title="Account Details" onactive={detailsTabActive}>
+                <template if:true={isLoading}>
+                    <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                </template>
+                <template if:false={isLoading}>
+                    <div class="slds-p-around_medium">
+                        <template if:true={recordId}>
+                            <lightning-record-form object-api-name="Account" record-id={recordId} fields={detailsFields}
+                                columns="3" mode={modeType} onsuccess={handleSuccess}
+                                oncancel={clickHandlerCancel}></lightning-record-form>
+                        </template>
+                    </div>
+                </template>
+            </lightning-tab>
+            <lightning-tab label="Billing Address" title="Billing Address" onactive={billAddTabActive}>
+                <template if:true={isLoading}>
+                    <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                </template>
+                <template if:false={isLoading}>
+                    <div class="slds-p-around_medium">
+                        <lightning-record-form object-api-name="Account" record-id={recordId} fields={billAddFields}
+                            columns="3" mode={modeType} onsuccess={handleSuccess}
+                            oncancel={clickHandlerCancel}></lightning-record-form>
+                    </div>
+                </template>
+            </lightning-tab>
+            <lightning-tab label="Shipping Address" title="Shipping Address" onactive={shipAddTabActive}>
+                <template if:true={isLoading}>
+                    <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                </template>
+                <template if:false={isLoading}>
+                    <div class="slds-p-around_medium">
+                        <lightning-record-form object-api-name="Account" record-id={recordId} fields={shipAddFields}
+                            columns="3" mode={modeType} onsuccess={handleSuccess}
+                            oncancel={clickHandlerCancel}></lightning-record-form>
+                    </div>
+                </template>
+            </lightning-tab>
+        </lightning-tabset>
+    </lightning-card>
+    <template if:true={newAccountModal}>
+        <c-new-account-modal onclosemodal={handleModalCloseAccount}></c-new-account-modal>
+    </template>
+    <lightning-layout>
+        <lightning-layout-item size="6">
+            <lightning-card icon-name="standard:contact" title={cardTitleContact} size="6">
+                <lightning-button slot="actions" variant="brand" label="New"
+                    onclick={handleNewContact}></lightning-button>
+                <div slot="footer" class="slds-align_absolute-center">
+                    <lightning-button label="View All" onclick={handleViewAllContact}></lightning-button>
+                </div>
+                <template if:true={displayColumns}>
+                    <lightning-layout multiple-rows="false">
+                        <template for:each={displayColumns} for:item="contact">
+                            <lightning-layout-item key={contact.Id} size="6" padding="around-small">
+                                <div class="slds-p-around_medium lgc-bg">
+                                    <lightning-tile label={contact.Name} data-id={contact.Id} actions={actions}
+                                        onactiontriggered={handleActionContact}>
+                                        <div class="slds-region_narrow" style="width:360px">
+                                            <dl class="slds-dl_horizontal">
+                                                <dt class="slds-dl_horizontal__label">Phone:</dt>
+                                                <dd class="slds-dl_horizontal__detail">{contact.Phone}</dd>
+                                                <dt class="slds-dl_horizontal__label">Email:</dt>
+                                                <dd class="slds-dl_horizontal__detail">{contact.Email}</dd>
+                                            </dl>
+                                        </div>
+                                    </lightning-tile>
+                                </div>
+                            </lightning-layout-item>
+                        </template>
+                    </lightning-layout>
+                </template>
+            </lightning-card>
+        </lightning-layout-item>
+        <lightning-layout-item size="6">
+            <lightning-card icon-name="standard:opportunity" title={cardTitleOpportunity} size="6">
+                <lightning-button slot="actions" variant="brand" label="New"
+                    onclick={handleNewOpportuninty}></lightning-button>
+                <div slot="footer" class="slds-align_absolute-center">
+                    <lightning-button label="View All" onclick={handleViewAllOpp}></lightning-button>
+                </div>
+                <template if:true={displayOpportunity}>
+                    <lightning-layout multiple-rows="false">
+                        <template for:each={displayOpportunity} for:item="opp">
+                            <lightning-layout-item key={opp.Id} size="6" padding="around-small">
+                                <div class="slds-p-around_medium lgc-bg">
+                                    <lightning-tile label={opp.Name} data-id={opp.Id} actions={actions}
+                                        onactiontriggered={handleActionOpportuninty}>
+                                        <div class="slds-region_narrow" style="width:360px">
+                                            <dl class="slds-dl_horizontal">
+                                                <dt class="slds-dl_horizontal__label">Stage Name:</dt>
+                                                <dd class="slds-dl_horizontal__detail">{opp.StageName}</dd>
+                                                <dt class="slds-dl_horizontal__label">Close Date:</dt>
+                                                <dd class="slds-dl_horizontal__detail">{opp.CloseDate}</dd>
+                                            </dl>
+                                        </div>
+                                    </lightning-tile>
+                                </div>
+                            </lightning-layout-item>
+                        </template>
+                    </lightning-layout>
+                </template>
+            </lightning-card>
+        </lightning-layout-item>
+    </lightning-layout>
+    <template if:true={newContactModal}>
+        <c-new-contact-modal account-id={recordId} onclosecontact={handleModalCloseContact}></c-new-contact-modal>
+    </template>
+    <template if:true={newOpportunintyModal}>
+        <c-new-opportunity-modal account-id={recordId}
+            oncloseopp={handleModalCloseOpportunity}></c-new-opportunity-modal>
+    </template>
+</template>
+
+Parent JS
+import { LightningElement, wire, track } from 'lwc';
+import { CurrentPageReference } from 'lightning/navigation';
+import getContactDetail from '@salesforce/apex/relatedContactOpportunities.getContactDetail';
+import getOppDetail from '@salesforce/apex/relatedContactOpportunities.getOppDetail';
+import { deleteRecord } from 'lightning/uiRecordApi';
+import { refreshApex } from '@salesforce/apex';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import NAME_FIELD from '@salesforce/schema/Account.Name';
+import INDUSTRY_FIELD from '@salesforce/schema/Account.Industry';
+import PHONE_FIELD from '@salesforce/schema/Account.Phone';
+import ACCOUNTNUMBER_FIELD from '@salesforce/schema/Account.AccountNumber';
+import RATING_FIELD from '@salesforce/schema/Account.Rating';
+import WEBSITE_FIELD from '@salesforce/schema/Account.Website';
+import TYPE_FIELD from '@salesforce/schema/Account.Type';
+import ANNUALREVENUE_FIELD from '@salesforce/schema/Account.AnnualRevenue';
+import ACCOUNTSOURCE_FIELD from '@salesforce/schema/Account.AccountSource';
+import BILLINGSTREET_FIELD from '@salesforce/schema/Account.BillingStreet';
+import BILLINGCITY_FIELD from '@salesforce/schema/Account.BillingCity';
+import BILLINGSTATE_FIELD from '@salesforce/schema/Account.BillingState';
+import BILLINGPOSTALCODE_FIELD from '@salesforce/schema/Account.BillingPostalCode';
+import BILLINGCOUNTRY_FIELD from '@salesforce/schema/Account.BillingCountry';
+import SHIPPINGSTREET_FIELD from '@salesforce/schema/Account.ShippingStreet';
+import SHIPPINGCITY_FIELD from '@salesforce/schema/Account.ShippingCity';
+import SHIPPINGSTATE_FIELD from '@salesforce/schema/Account.ShippingState';
+import SHIPPINGPOSTALCODE_FIELD from '@salesforce/schema/Account.ShippingPostalCode';
+import SHIPPINGCOUNTRY_FIELD from '@salesforce/schema/Account.ShippingCountry';
+
+export default class StudentCollectionHeader extends LightningElement {
+
+    @track recordId;
+    @track isLoading = false;
+    @track modeType = 'readonly';
+    @track displayColumns = [];
+    @track displayOpportunity = [];
+    @track noOfContacts
+    @track count = [];
+    @track newAccountModal = false;
+    @track newContactModal = false;
+    @track newOpportunintyModal = false;
+    @track wiredContactDetail;
+    @track wiredOpportunityDetail;
+    @track wiredContactList;
+
+
+    @track actions = [
+        { label: 'Edit', value: 'edit', iconName: 'utility:edit' },
+        { label: 'Delete', value: 'delete', iconName: 'utility:delete' },
+    ];
+
+    @wire(CurrentPageReference) pageRef({ state }) {
+        if (state) {
+            this.recordId = state.c__recordId;
+        }
+    }
+    @wire(getContactDetail, { recordId: '$recordId' }) wiredContactDetail({ data }) {
+        this.wiredContactList = data;
+        if (data) {
+            this.displayColumns = data;
+            this.lengthContact = this.displayColumns.length;
+        }
+    }
+    @wire(getOppDetail, { recordId: '$recordId' }) wiredOpportunityDetail({ data }) {
+        if (data) {
+            this.displayOpportunity = data;
+            this.lengthOpportunity = this.displayOpportunity.length;
+        }
+    }
+    get cardTitleContact() {
+        return `Related Contacts (${this.lengthContact})`;
+    }
+    get cardTitleOpportunity() {
+        return `Related Opportunity (${this.lengthOpportunity})`;
+    }
+    detailsFields = [
+        NAME_FIELD,
+        WEBSITE_FIELD,
+        PHONE_FIELD,
+        ACCOUNTNUMBER_FIELD,
+        INDUSTRY_FIELD,
+        TYPE_FIELD,
+        RATING_FIELD,
+        ANNUALREVENUE_FIELD,
+        ACCOUNTSOURCE_FIELD
+    ]
+    billAddFields = [
+        BILLINGSTREET_FIELD,
+        BILLINGCITY_FIELD,
+        BILLINGSTATE_FIELD,
+        BILLINGPOSTALCODE_FIELD,
+        BILLINGCOUNTRY_FIELD
+    ];
+    shipAddFields = [
+        SHIPPINGSTREET_FIELD,
+        SHIPPINGCITY_FIELD,
+        SHIPPINGSTATE_FIELD,
+        SHIPPINGPOSTALCODE_FIELD,
+        SHIPPINGCOUNTRY_FIELD
+    ];
+
+    showSpinner() {
+        this.isLoading = true;
+        setTimeout(() => {
+            this.isLoading = false;
+        }, 1500);
+    }
+    detailsTabActive() {
+        this.showSpinner();
+    }
+    billAddTabActive() {
+        this.showSpinner();
+    }
+    shipAddTabActive() {
+        this.showSpinner();
+    }
+
+    clickHandlerEdit() {
+        this.modeType = 'edit';
+    }
+    // handleSubmit(e) {
+    //     e.preventDefault();
+    //     this.template.querySelector('lightning-record-form').submit();
+    // }
+    handleSuccess() {
+        this.modeTypeFun();
+    }
+    clickHandlerCancel() {
+        this.modeTypeFun();
+    }
+    modeTypeFun() {
+        this.modeType = 'readonly';
+    }
+
+    handleNewContact() {
+        this.newContactModal = true;
+    }
+    handleModalCloseContact(e) {
+        this.newContactModal = false;
+        if (e.detail) {
+            setTimeout(() => {
+                refreshApex(this.wiredContactDetail);
+                refreshApex(this.wiredContactDetail).then(res => {
+                    console.log("Selected Info inside then block" + JSON.stringify(res));
+                }).catch(err => {
+                    console.error("Selected Info inside error block" + JSON.stringify(err));
+                });
+
+                // getContactDetail({ recordId: '$recordId' })
+                //     .then(res => {
+                //         console.log("Selected Info: " + JSON.stringify(res));
+                //         this.displayColumns = res;
+                //         this.displayColumns = this.displayColumns.flat();
+                //     })
+                //     .catch(error => {
+                //         console.error("Catch block: ", error);
+                //         alert("An error occurred: " + error.message);
+                //     });
+            }, 3500); // Delay for 1500 milliseconds
+        }
+        console.log("Selected Info passed detail:" + JSON.stringify(e.detail));
+    }
+    clickHandlerNewAccount() {
+        this.newAccountModal = true;
+    }
+    handleModalCloseAccount(e) {
+        this.newAccountModal = false;
+        if (e.detail) {
+            this.recordId = e.detail;
+        }
+        console.log("Selected Info passed detail:" + e.detail);
+    }
+    handleNewOpportuninty() {
+        this.newOpportunintyModal = true;
+    }
+    handleModalCloseOpportunity(e) {
+        //refreshApex(this.wiredOpportunityDetail);
+        console.log("Select Info Opp New" + JSON.stringify(e));
+        refreshApex(this.displayOpportunity);
+        this.newOpportunintyModal = false;
+    }
+    handleActionOpportuninty(e) {
+        this.handleAction(e);
+    }
+    handleActionContact(e) {
+        this.handleAction(e);
+    }
+    handleAction(e) {
+        const actionName = e.detail.action.value;
+        const record = e.currentTarget.dataset.id;
+        switch (actionName) {
+            case 'delete':
+                this.deleteRec(record);
+                break;
+            case 'edit':
+                this.editAction(record);
+                break;
+        }
+    }
+    deleteRec(record) {
+        deleteRecord(record).then(async res => {
+            //console.log("Selected Info" + JSON.stringify(res));
+            try {
+                if (record.startsWith('006')) {
+                    this.showToast("Successful", "Opportunity Record Deleted Successfully", "success");
+                    //await refreshApex(this.wiredOpportunityDetail);
+                    await refreshApex(this.displayOpportunity);
+                } else if (record.startsWith('003')) {
+                    this.showToast("Successful", "Contact Record Deleted Successfully", "success");
+                    //await refreshApex(this.wiredContactDetail);
+                    await refreshApex(this.displayColumns);
+                }
+            } catch (error) {
+                console.error("Error deleting record: ", error);
+            }
+        }).catch(res => {
+            this.showToast("Failed", "Failed to delete record", "error");
+            console.log("Selected Info" + JSON.stringify(res));
+        });
+    }
+    editAction(record) {
+        //console.log("Selected Info: editAction:" + record);
+    }
+    showToast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title: title, message: message, variant: variant }));
+    }
+}
+
+child Html
+<template>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header slds-p-vertical_x-small">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close"
+                    onclick={handleCancel}>
+                    <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                <h2 class="slds-text-heading_medium">New Contact</h2>
+            </header>
+            <div class="slds-modal__content slds-p-around_medium slds-p-vertical_x-small">
+                <lightning-record-edit-form object-api-name="Contact" onsuccess={handleSuccess} onerror={handleError}
+                    onsubmit={handleSubmit}>
+                    <lightning-layout multiple-rows>
+                        <lightning-layout-item size="6" class="slds-p-around_x-small slds-m-vertical_x-small">
+                            <lightning-input-field field-name="FirstName" title="First Name"></lightning-input-field>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6" class="slds-p-around_x-small slds-m-vertical_x-small">
+                            <lightning-input-field field-name="LastName" title="Last Name"></lightning-input-field>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6" class="slds-p-around_x-small slds-m-vertical_x-small">
+                            <lightning-input-field field-name="Phone" title="Phone"></lightning-input-field>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6" class="slds-p-around_x-small slds-m-vertical_x-small">
+                            <lightning-input-field field-name="Email" title="Email"></lightning-input-field>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" class="slds-p-around_x-small slds-m-vertical_x-small">
+                            <lightning-input-field field-name="AccountId" title="Account Name"
+                                value={accountId}></lightning-input-field>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                </lightning-record-edit-form>
+            </div>
+            <footer class="slds-modal__footer slds-p-around_small slds-grid slds-grid_align-center">
+                <lightning-button type="cancel" label="Cancel" onclick={handleCancel}
+                    class="slds-m-right_small"></lightning-button>
+                <lightning-button label="Save & New" type="submit" onclick={handleSaveNew}
+                    class="slds-m-right_small"></lightning-button>
+                <lightning-button variant="brand" type="submit" label="Save" onclick={handleSubmit}></lightning-button>
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+Child JS
+import { LightningElement, api, track, wire } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
+export default class NewContactModal extends LightningElement {
+    @api accountId;
+    @track contactId;
+
+    handleCancel() {
+        this.dispatchEvent(new CustomEvent('closecontact'));
+    }
+    handleSaveNew() {
+
+    }
+    handleSubmit(e) {
+        e.preventDefault();
+        this.template.querySelector('lightning-record-edit-form').submit();
+    }
+
+    handleError(e) {
+        console.log("Selected Info" + JSON.stringify(e));
+    }
+
+    handleSuccess(event) {
+        this.contactId = event.detail.id;
+        this.showToast("Successfull", "Contact created Successfully", "success");
+        try {
+            if (this.contactId) {
+                this.dispatchEvent(new CustomEvent('closecontact', { detail: this.contactId, bubbles: true, composed: true }));
+            }
+        } catch (error) {
+            console.log("Selected Info dispatch failed" + error);
+        }
+    }
+    showToast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title: title, message: message, variant: variant }));
+    }
+}
