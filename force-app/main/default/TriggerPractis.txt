@@ -1,0 +1,1559 @@
+Trigger AccConActive on Contact(After insert,After Update,After Undelete)
+{
+  public static void updateAccountCount(set<Id> accountIds){
+    List<Account>accountUpdate=[select Id,Active_contact_Count_c,(Select id,Active_contact from Contacts Where Active_contact=TRUE)
+     from Account WHERE ID IN :accountIds];
+
+    for(Account acc:accountUpdate){
+        Integer count=acc.Contact.Size();
+        acc.Active_contact_Count_c=count;
+    }
+
+   if(!accountUpdate.isEmpty()){update accountUpdate;}
+    
+  }
+
+  if(Trigger.isInsert || Trigger.isUpdate || Trigger.isUndelete){
+    set<Id>accIds=New set<Id>();
+    if(contact c:Trigger.New){
+        if(c.AccountId != Null){
+            accIds=c.AccountId;
+        }
+    }
+    updateAccountCount(accIds);
+  }
+}
+
+================================================================================================
+trigger AcciuntConPhoneUpdate on Account (before update) {
+
+    Set<Id> accId = new Set<Id>();
+    for (Account ac : Trigger.new) {
+        if (ac.Phone != Trigger.oldMap.get(ac.Id).Phone) {
+            accId.add(ac.Id);
+        }
+    }
+    if (!accId.isEmpty()) {
+        List<Contact> contactToUpdate = [SELECT Id, AccountId FROM Contact WHERE AccountId IN :accId];
+
+        Map<Id, String> accountPhoneMap = new Map<Id, String>();
+
+        for (Account a : Trigger.new) {
+            if (a.Phone != null) {
+                accountPhoneMap.put(a.Id, a.Phone);
+            }
+        }
+  
+        for (Contact cc : contactToUpdate) {
+            if (accountPhoneMap.containsKey(cc.AccountId)) {
+                cc.Phone = accountPhoneMap.get(cc.AccountId);
+            }
+        }
+        update contactToUpdate;  
+    }
+        
+}
+
+Trigger AccountPhone on Account(Before Update)
+{
+    set<Id>accids= New set<Id>();
+    for(Account a:Trigger.New){
+        if(a.Phone != Trigger.oldMap.get(a.Id).Phone){
+            accIds.add(a.id);
+        }
+    }
+
+    Map<Id,string>MapAccids=new Map<Id,string>();
+    List<Contact>contactUpdate = new List<Contact>([select id ,AccountId from contact Where AccountId IN :accIds]);
+    for(Account acc:Trigger.New){
+     MapAccids.put(acc.id,acc.Phone);
+    }
+    
+    for(Contact cc:contactUpdate){
+        if(MapAccids.containsKey(cc.AccountId)){
+            cc.Phone=MapAccids.get(cc.AccountId);
+        }
+    }
+
+    update contactUpdate;
+
+}
+==============================================================================================
+
+Trigger AccountCountContact on Contact(After Update,After Insert,After Undalete){
+
+
+    Public static Void getAccountUpdate(set<Id> accid){
+            List<Account> accList=[Select id,Active_Contact_c,(select AccountId,Active__c from Contact Where Active__c =TRUE) 
+            from Account WHERE ID IN :accid];
+
+            for(Account acc:accList){
+                acc.Active_Contact_c= Integer acc.Contact.Size();
+            }
+            if(!accList.isEmpty()){Update accList;}
+            
+    }
+
+    if(Trigger.isUpdate || Trigget.isInsert || Trigger.isUndelete){
+        set<Id>accIds=new set<Id>();
+
+        for(Contact cc:Trigger.New){
+            if(cc.AccountId != Null){
+                accIds.add(cc.AccountId);
+            }
+        }
+        getAccountUpdate(accIds);
+    }
+}
+
+Trigger AccPhone on Account(Before Update){
+ set<Id> AccID=New set<Id>();
+
+ for(Account a:Trigger.New){
+    if(a.Phone != Trigger.oldMap.get(a.id).Phone){
+        AccID.add(a.id);
+    }
+ }
+ Map<Id,String> MapAcc=New Map<Id,String>();
+ for(Account acc:Trigger.New){
+    MapAcc.put(acc.Id,acc.Phone);
+ }
+ List<Contact>contactUpdate=[Select id,AccountId,Active__c From Contact WHERE AccountId IN : AccID];
+
+ for(Contact cc:contactUpdate){
+    if(MapAcc.containsKey(cc.AccountId)){
+        cc.Phone= MapAcc.get(cc.AccountId);
+    }
+ }
+ update contactUpdate;
+}
+
+======================================================================================================
+Trigger ActiveContactT on Contact(After Insert ,After Update,After Undelete){
+    if(Trigger.isInsert,Trigger.isUpdate,Trigger.isDelete){
+        set<Id> Accids=New set<Id>();
+        for(Contact cc:Trigger.New){
+            if(cc.AccountId != Null){
+                Accids.add(cc.AccountId);
+            }
+        }
+
+        AccountActiveConUpdate(accids);
+    }
+
+    Public static void AccountActiveConUpdate(set<Id> Accountids){
+        List<Account> Acc=[Select id,Active_Contact_c,(Select AccountId,Active__c From Contacts WHERE Active__c != Null) From Account WHERE ID IN :Accountids];
+        for(Account a:Acc){
+            a.Active_Contact_c=a.Contact.Size();
+        }
+        Update Acc;
+    }
+}
+==============================================================================
+Trigger PhoneAccount on Account(Before Update){
+    set<Id> AccId =new Set<Id>();
+    for(Account a:Trigger.New){
+        if(a.Phone != Trigger.New.oldMap.get(a.id).Phone){
+            AccId.add(a.id);
+        }
+    }
+
+    Map<Id,string> accMap=new Map<Id,string>();
+    for(Account a:Trigger.New){
+        accMap.put(a.id,a.Phone);
+    }
+    List<Contact> contactPhone=[select id,AccountId,Phone from Contact Where AccountId IN :AccId];
+
+    for(contact cc:contactPhone){
+        if(accMap.containsKey(cc.AccountId)){
+            cc.Phone=accMap.get(cc.AccountId);
+        }
+    }
+}
+
+======================================================
+Trigger AccConCount on Contact(After Insert,After Update,After Delete){
+    If(Trigger.isInsert || Trigger.isUpdate || Trigger.isDelete){
+        set<id>accid=new set<id>();
+        for(Contact cc:Trigger.New){
+            if(!cc.AccountId.isEmpty()){
+                accid.add(cc.AccountId);
+            }
+        }
+        UpdateAccountConCount(accid);
+    }
+
+    UpdateAccountConCount(set<Id> accountids){
+        List<Account>AccList=[Select id,(Select AccountId from Contacts) from Account WHERE ID IN accountids];
+
+        for(Account a:AccList){
+            a.Desc=a.Contact.Size();
+        }
+        Update AccList;
+    }
+}
+
+Trigger AccPhoneUp on Account(After insert, After Update)
+{
+   map<Id,string>Amap=New Map<id,string>();
+  set<Id>accId=new set<Id>();
+  for(Account a:Trigger.New){
+    if(a.Phount != Trigger.oldMap.get(a.Id).Phone){
+      accId.add(a.Id);
+      Amap.put(a.Id,a.Phone);
+    }
+  }
+
+  List<Contact> conList=[Select AccountId,phone from Contact WHERE ID IN : accID];
+  
+  for(Contact c: conList){
+    if(Amap.containsKet(c.AccountId)){
+        c.Phone=Amap.get(c.AccountId);
+    }
+  }
+  if(!conList.isEmpty()){Update conList;}
+
+}
+
+Trigger ContactCount on Contact(After Insert,after Update,After Undelete){
+
+    ste<Id>accId= New set<Id>();
+    for(Contact c: Trigger.New){
+        if(c.AccountId != Null){
+            accId.add(c.AccountId)
+        }
+    }
+
+    List<Account>accList =[Select id,Desc from Account WHERE ID IN : accId];
+    for(Account a:accList){
+        a.Desc=a.Contact.Size();
+    }
+    Update acclist;
+}
+================================================================================================
+Number_of_cases__c
+
+Trigger NumberOfCases on Account (After Update){
+    integer AccNumber;
+    integer caseNumber;
+    integer Ncase;
+ set<Id>accId=new set<Id>();
+ for(Account a:Trigger.New){
+    if(a.Number_of_cases__c != Null){
+        accId.add(a.Id);
+         AccNumber=a.Number_of_cases__c;
+    }
+   
+   List<Account> AccList=[Select id,Number_of_cases__c,(Select AccountId from Case) from Account Where ID IN :accId];
+
+   for(Account a: AccList){
+    a.caseNumber=a.Case.Size();
+   }
+ }
+ Ncase=AccNumber - caseNumber;
+
+ for(integer c:Ncase){
+    case cc= new case();
+    cc.AccountId=
+ }
+}
+========================================================================
+trigger CreateCasesOnAccountUpdate on Account (after update) {
+
+    // Create a map to track the accounts we need to process
+    Map<Id, Account> accountsToProcess = new Map<Id, Account>();
+
+    // Loop through the updated accounts and collect the ones with relevant data
+    for (Account acc : Trigger.new) {
+        // Check if the Number_of_Cases__c field has been modified
+        Account oldAcc = Trigger.oldMap.get(acc.Id);
+        if (acc.Number_of_Cases__c != oldAcc.Number_of_Cases__c) {
+            accountsToProcess.put(acc.Id, acc);
+        }
+    }
+
+    // If there are accounts to process
+    if (!accountsToProcess.isEmpty()) {
+        // Query the number of cases related to these accounts (using aggregate query)
+        Map<Id, Integer> accountCaseCountMap = new Map<Id, Integer>();
+
+        // Perform a single query to get the case counts for the accounts that have been updated
+        List<AggregateResult> caseCounts = [SELECT AccountId, COUNT(Id) caseCount
+                                            FROM Case
+                                            WHERE AccountId IN :accountsToProcess.keySet()
+                                            GROUP BY AccountId];
+        
+        // Populate the map with case counts
+        for (AggregateResult ar : caseCounts) {
+            accountCaseCountMap.put((Id)ar.get('AccountId'), (Integer)ar.get('caseCount'));
+        }
+
+        List<Case> casesToInsert = new List<Case>();
+
+        // Loop through each account that needs to be processed
+        for (Account acc : accountsToProcess.values()) {
+            Integer existingCaseCount = accountCaseCountMap.get(acc.Id) != null ? accountCaseCountMap.get(acc.Id) : 0;
+            Integer casesToCreate = acc.Number_of_Cases__c - existingCaseCount;
+
+            // If cases need to be created
+            if (casesToCreate > 0) {
+                for (Integer i = 0; i < casesToCreate; i++) {
+                    Case newCase = new Case(
+                        AccountId = acc.Id,
+                        Status = 'New', // Set initial status of the case (could be changed based on requirements)
+                        Priority = 'Medium', // Set initial priority of the case (could be customized)
+                        Origin = 'Web' // You can adjust the origin or other fields as needed
+                    );
+                    casesToInsert.add(newCase);
+                }
+            }
+        }
+
+        // Insert the new cases if there are any
+        if (!casesToInsert.isEmpty()) {
+            insert casesToInsert;
+        }
+    }
+}
+============================================================================================
+trigger CaseCreateACC on Account(After Update){
+Map<Id,Account>AccountToProcess=New Map<Id,Account>();
+
+for(Account accounts: Trigger.New){
+    if(acounts.Number_of_Cases__c != Null){
+        AccountToProcess.put(account.Id,account);
+    }
+}
+ List<AggregateResult> CaseCountNum=[SELECT id,AccountId,Count(Id) caseCount From Case 
+                             WHERE AccountId IN :AccountToProcess.KeySet()
+                             GROUP By AccountId];
+
+ Map<id,Integer> AccountCountCase = New Map<Id,Integer>();
+ List<Case> caseToCriteList=New List<Case>();
+ for(AggregateResult arr:CaseCountNum){
+    AccountCountCase.put((Id)CaseCountNum.get('AccountId'),(Integrt)CaseCountNum.get('caseCount'));
+ }
+  
+  for(Account acc:AccountToProcess){
+    Integer TotatCase;
+    Integer caseCountCase=(AccountCountCase.get(acc.Id) != Null ? AccountCountCase.get(acc.Id) :0);
+
+    TotatCase=acc.Number_of_Cases__c - caseCountCase;
+
+    if(caseCountCase > 0){
+    
+     for(integer i=0;i<caseCountCase;i++){
+        Case Casetoc=new Case(AccountId=acc.Id,Status='New',Priority='Low' Origen='Web');
+     }
+     AccountCountCase.add(Casetoc);
+    }
+  }
+
+  if(!caseToCriteList.isEmpty){
+    insert caseToCriteList;
+  }
+
+}
+
+===========================================================================================================
+Trigger AccCase on Account(After Update){
+   
+    Map<Id,Account>accId=Map<Id,Account>();
+    for(Account a:Trigger.New){
+        if(a.Active_case__c != Trigger.oldMap.gat(a.Id).Active_case__c){
+            accId.put(a.Id,a);
+        }
+    }
+
+    Map<Id,Integer> CountAccountCase =New Map<Id,Integer>();
+
+   List<Aggregateresult> AggR=[SELECT AccountId,Count(Id) caseCount From Case WHERE AccountId IN accId.KeySet() GROUP By AccountId];
+    
+    for(Aggregateresult arr:AggR){
+      CountAccountCase.put((Id)arr.get('AccountId'),(Integer)arr.get('caseCount'));
+    }
+
+    for(Account acc:Trigger.New){
+        Integer relatedCase=(CountAccountCase.get(acc.Id) != Null ? CountAccountCase.get(acc.Id) :0 );
+        Integer Total=acc.Number_of_Cases__c - relatedCase;
+    
+
+    for(Integer i=0;i<Total;i++){
+        Case cs= New Case(AccountId=acc.Id,Origen='Web',Status='New',Priority='Low');
+       
+    }
+     CaseToCreate.add(cs);
+  }
+  if(!CaseToCreate.isEmpty()){
+    insert CaseToCreate;
+  }
+}
+================================================================================================================
+
+trigger UpdateAccountNameOnRelatedRecords on Account (after update) {
+
+    Set<Id> accountIdsToUpdate = new Set<Id>(); 
+    for (Account acc : Trigger.new) {
+        Account oldAcc = Trigger.oldMap.get(acc.Id);
+        if (acc.Name != oldAcc.Name) { 
+            accountIdsToUpdate.add(acc.Id);
+        }
+    }
+
+    if (!accountIdsToUpdate.isEmpty()) {
+     
+        List<Contact> contactsToUpdate = 
+       [SELECT Id, AccountId, Account.Name FROM Contact WHERE AccountId IN :accountIdsToUpdate];
+
+        List<Opportunity> opportunitiesToUpdate = 
+         [SELECT Id, AccountId, Account.Name FROM Opportunity WHERE AccountId IN :accountIdsToUpdate];
+
+        for (Contact con : contactsToUpdate) {
+            con.Account.Name = Trigger.newMap.get(con.AccountId).Name;
+        }
+
+        for (Opportunity opp : opportunitiesToUpdate) {
+            opp.Account.Name = Trigger.newMap.get(opp.AccountId).Name;
+        }
+
+        try {
+            update contactsToUpdate;
+            update opportunitiesToUpdate;
+        } catch (DmlException e) {
+            System.debug('Error updating related records: ' + e.getMessage());
+        }
+    }
+}
+
+============================================================================================================
+Trigger AccCaseCount on Account(After Update){
+Map<Id,Account>accMap=New Map<Id,Account>();
+ for(Account acc:Trigger.new){
+    if(acc.NumberOfCases__c != Trigger.oldMap.get(acc.Id).NumberOfCases__c){
+        accMap.put(acc.Id,acc);
+    }
+ }
+
+ List<AggregateResult> AGR=[SELECT AccountId,COUNT(Id) caseCount From Case
+                                   WHERE AccountID IN accMap.KeySet()
+                                   GROUP BY AccountId];
+                        
+ Map<Id,Integer>AccCaseCount= New Map<Id,Integer>();
+ 
+ for(AggregateResult arr: AGR){
+    AccCaseCount.put((Id)arr.get('AccountId'),(Integer)arr.get('casecount'));
+ }
+ List<Case>CaseList=new List<Case>();
+ for(Account CurrentAccounts: Trigger.New){
+    Integer caseNumbers=(AccCaseCount.get(CurrentAccounts.Id) != Null ? AccCaseCount.get(CurrentAccounts.Id) : 0);
+
+    Integer Total= CurrentAccounts.NumberOfCases__c - caseNumbers;
+
+    for(Integer count=1; count<Total; count++){
+        case Ncase=New case(AccountID=CurrentAccounts.Id,Origer='Web',Status='New',Priority='Low');
+        CaseList.add(Ncase);
+    }
+ }
+ if(!CaseList.isEmpty()){Insert CaseList;}
+}
+
+
+=========================================================================================================
+Trigger ContactCount on Contact(After Insert,After Update,After Undelete){
+ set<Id>accId=New Set<Id>();
+ for(Contact cc:Trigger.New){
+    if(cc.AccountId != Null){
+        accId.add(cc.AccountId);
+    }
+ }
+ List<Account> UpdateAccount=[Select id,NumberOfContact__c fron Account Where ID IN : accId]; 
+ for(Account a:UpdateAccount){
+    a.NumberOfCantact__c=a.Contact.Size();
+ }
+ Update UpdateAccount;
+}
+
+=======================================================================
+if opportunity.Stage='Closed Own'; then Account.Rateing='High';
+
+Trigger OppAccRating on Opportunity(After Update){
+
+    set<Id> accId=New set<Id>();
+
+    for(Opportunity Opportunitys:Trigger.New){
+     if(Opportunitys.Stage ='Closed Own' && Opportunitys.AccountId != Null){
+        accId.add(Opportunitys.AccountId);
+     }
+    }
+
+    List<Account> AccountList=[Select Id ,Rating from Account WHERE ID IN : accId];
+
+    for(Account a:AccountList){
+        a.Rateing='High';
+    }
+    Update AccountList;
+}
+
+Public Class UpdateAccountDataBatch impeliment Database.Batchable<sObject>,Database.Stateful
+{
+    List<Account>SuccessRecordsList=new List<Account>();
+    List<Account>FaledRecordsList=new List<Account>();
+
+    Public Database.QuearyLocater start (Database.BatchableContaxt bc){
+        List<Account> AccountLIst=[SELECT id,Name from Account WHERE Name LIKE \'% Test %\'];
+        return Database.getQuearyLocater(AccountLIst);
+    }
+
+    Public void Execute(Database.BatchableContext bc ,List<Account> AccountList){
+        Integer j=1;
+        
+            for(Account acc:AccountList){
+                try{
+                acc.Name=acc.Name +" "+j;
+                SuccessRecordsList.add(acc);
+                   j++;
+                }
+                catch(Exception e){
+                FaledRecordsList.add(acc);
+                }
+            }
+
+            if(!SuccessRecordsList.isEmpty()){Update SuccessRecordsList;}
+    }
+    public void finish (Database.batchableContext bc){
+        system.debug('Success Records :'+SuccessRecordsList.Size());
+        system.debug('Faled Records :'+FaledRecordsList.Size());
+    }
+} 
+
+=============================================================================
+Trigger OneOpponAcc on Oppertunity(Before insert){
+    set<Id>accid=New set<Id>();
+
+    for(Opportunity op:Trigger.New){
+        if(op.AccountId != Null){
+            accid.app(op.AccountId);
+        }
+    }
+    Map<Id,Account> MapAcc=New Map<Id,Account>([Select id,(SELECT id From Opportunity Where AccountId != Null) from Account where ID IN :accid]);
+
+  for(Opportunity oop:Trigger.New){
+    if(oop.AccountId != Null && MapAcc.ContainsKey(opp.AccountId)){
+        Account accounts=New Account();
+        accounts=MapAcc.get('opp.AccountId');
+        if(accounts.Opportunity.Size() > 1 ){
+            opp.addError('Can Not Insert Morethan One opp');
+        }
+    }
+  }
+}
+=================================================================================
+Account phone is update then Contact Otherphone=old phone value of Account and MobilePhone= new Phone Value of Account
+
+Trigger Phonevalues on Account(After update){
+ set<Id>accid=new set<Id>();
+    for(Account ac:Trigger.New){
+        if(ac.Phone != Trigger.oldMap.get(ac.Id).Phone){
+         accid.add(ac.id);
+        }
+    }
+    List<contact>con=[Select OtherPhone,MobilePhone,AccountId from Contact WHERE AccountID IN :accid];
+     for(Contact c:con){
+        c.Otherphone=Trigger.oldMap.get(c.AccountId).Phone;
+        c.MobilePhone=Trigger.NewMap.get(c.AccountId).Phone;
+     }
+     if(!con.isEmpty()){Update con;}
+}
+==================================================================
+Trigger AccPhoneUp on Account(After insert, After Update)
+{
+   map<Id,string>Amap=New Map<id,string>();
+  set<Id>accId=new set<Id>();
+  for(Account a:Trigger.New){
+    if(a.Phount != Trigger.oldMap.get(a.Id).Phone){
+      accId.add(a.Id);
+      Amap.put(a.Id,a.Phone);
+    }
+  }
+
+  List<Contact> conList=[Select AccountId,phone from Contact WHERE ID IN : accID];
+  
+  for(Contact c: conList){
+    if(Amap.containsKet(c.AccountId)){
+        c.Phone=Amap.get(c.AccountId);
+    }
+  }
+  if(!conList.isEmpty()){Update conList;}
+
+}
+
+=============================================================================
+Public NumberR class{
+    Public static Void Numcount(){
+        Integer[] arr=New Integer[]{2,3,4,5,2,3,6,7,5,7,8,5,9,5,3,4,8};
+
+        Map<Integer,Integer>MapNum=New Map<Integer,Integer>();
+
+        for(Integer num:arr){
+            if(MapNum.containsKey(num)){
+                MapNum.put(num,MapNum.get(num) + 1);
+            }
+            else{
+                MapNum.put(num,1);
+            }
+        }
+
+        for(Integer numb:MapNum.KeySet()){
+            system.debug(numb +' Appers '+MapNum.get(numb)+' Times')
+        }
+    }
+}
+
+============================================================================================================
+Trigger ContactCount on Contact(After insert,After Update,After Undelete){
+    set<Id>accId =new set<Id>();
+
+    for(Contact con:Trigger.New){
+        if(con.AccountId != Null){
+            accId.add(con.AccountId);
+        }
+    }
+   
+   List<Account> AccountList=[Select Id,(Select AccountId From Contact WHERE AccountId != Null) From Account 
+                              Where ID IN accId];
+    
+    for(Account aa:AccountList){
+        aa.Desc=aa.Contact.Size();
+    }
+
+}
+
+Trigger NumCase on Account(After insert){
+   map<Id,Account> accmap=new map<Id,Account>();
+   for(Account aa:Trigger.New){
+    if(aa.Number_of_Cases__c != Null){
+        accmap.put(aa.Id,aa);
+    }
+   } 
+   List<AggregateResule> Ager=[SELECT COUNT(id) caseCount,AccountId from Case Where AccountId IN : accmap.keyset()
+                                GROUP BY AccountId];
+
+    map<Id,Integer> countMap = New map<Integer,Integer>();
+
+    for(AggregateResule ar: Ager){
+       countMap.put((Id)Ager.get('AccountId'),(Integer)Ager.get('caseCount'));
+    }
+    
+    List<Case>caseCreateList = New List<Case>();
+    for(Account act:Trigger.New){
+        Integer RelatedCaseCount=(countMap.get(act.Id) != Null ? countMap.get(act.Id) : 0);
+        Integer Totel= Number_of_Cases__c - RelatedCaseCount;
+     
+       for(Integer i=1;i<Totel;i++){
+        Case caseCreate=new Case([AccountId=act.id,Status='New',Priority='High',Origen='web']);
+        caseCreateList.add(caseCreate);
+       }
+    }
+    if(!caseCreateList.isEmpty()){insert caseCreateList;}
+}
+
+
+====================================
+Trigger PhoneUp on Account(After Update){
+set<Id>accIds=new Set<Id>();
+    for(Account accounts:Trigger.New){
+        if(accounts.Phone != Trigger.oldmap.get(accounts.Id).Phone){
+            accIds.add(accounts.id);
+        }
+    }
+
+    List<Contact>UpdateContacts=[Select Id,Phone,AccountId from Contact Where AccountId IN :accIds];
+    
+    for(Contact con:UpdateContacts){
+        con.Phone=Trigger.newMap.get(con.AccountId).Phone;
+    }
+    if(!UpdateContacts.isEmpty()){Update UpdateContacts;}
+}
+
+=========================================================================
+P to c
+
+import LightningElement from 'lwc';
+
+export default class MyChieldClass extends LightningElement{
+  @api passedData=''; 
+}
+
+<template>
+ <p>Passed Data = {passedData}</p>
+</template>
+
+<template>
+ <lightning-input Label="Enter Values" value={Inputvalues} onChange={HandelChange}></lightning-input>
+ <my-chield-class passedData={Inputvalues}></my-chield-class>
+</template>
+import LightningElement from'lwc';
+
+export default myParent extends LightningElement{
+Inputvalues='';
+    HandelChange(event){
+        this.Inputvalues=event.target.values;
+    }
+}
+
+=====================================================
+C to P  
+
+import LightningElement from 'lwc'
+
+export default ChildClass extends LightningElement{
+    PassData='';
+    HandelChange(event){
+        this.passedData=event.target.values;
+    }
+
+    ButtonClick(){
+        this.dispatchEvent(New customEvent('chielddata',{detail:this.PassData}));
+    }
+}
+
+
+<clield-class onchielddata={HandelChieldData}></clield-class>
+
+ chielddataHandel='';
+
+ HandelChieldData(event){
+    this.chielddataHandel=event.detail;
+ }
+============================================================
+<lightning-Record-form 
+                       object-api-name="Account",
+                       Fields={AccFields},
+                       onSuccess={HandelSuccess},
+                       columns="4"
+                       >
+</Lightning-Record-form>
+
+import AccountName from '@salesforce/sehema/Account.Name'
+import AccountPhone from '@salesforce/sehema/Account.Phone'
+
+AccFields={AccountName,AccountPhone}
+
+HandelSuccess(event){
+    RecordID=event.detail.Id;
+    alert('Record Created',RecordID);
+}
+
+======================================================
+Trigger ConCount on Contact(After insert){
+    set<Id>accId=new set<Id>();
+    for(Contact cc:Trigger.New){
+        if(cc.AccountId != NUll){
+            accId.add(cc.AccountId);
+        }
+    }
+    List<Account> AccLIst=[SELECT id,desc from Account WHERE ID IN :accId];
+
+    for(Account aa:AccLIst){
+        aa.desc=aa.Contact.Size();
+    }
+    if(!AccLIst.isEmpty()){Update AccLIst}
+}
+
+=======================================================
+Trigger PhoneUpdate on Account(After Update){
+     set<Id>accId=new set<Id>();
+    for(Account aac:Trigger.New){
+        if(aac.Phone != Trigger.oldMap.get(aac.Id).Phone){
+            accId.add(aac.Id);
+        }
+    }
+    LIst<Contact> conList=[SELECT id,Phone from Contact WHERE AccountId IN :accId];
+    for(contact cc:conList){
+        cc.Phone=Trigger.newMap.get(cc.AccountId).Phone;
+    }
+    if(!conList.isEmpty()){Update conList}
+}
+===========================================================
+Trigger AccountCase on Account(After Insert,After Update){
+
+  Integer AccCaseNum;
+  Integer Total;
+  map<Id,Account>Mapacc=new map<Id,Account>();
+    for(Account aac:Trigger.New){
+        if(aac.Number_of_Cases__c != Trigger.oldMap.get(acc.id).Number_of_Cases__c){
+            Mapacc.put(aac.Id,aac);
+        }
+    }
+
+    List<AggregateResult> Agr=[SELECT AccountId,COUNT(Id) caseCount FROM Case 
+                               WHERE AccountId IN Mapacc.Keyset() 
+                               GROUP BY AccountId];
+
+    map<Id,integer> AccCaseCount=new  map<integer,integer> ();
+
+    for(AggregateResule ar:Agr){
+        AccCaseCount.put((Id)ar.get('AccountId'),(Integer)ar.get('caseCount'));
+    }
+    Case newCase= new Case();
+    for(Account a:Trigger.New){
+        AccCaseNum=(AccCaseCount.get(a.id) != Null ? AccCaseCount.get(a.Id):0);
+        Total= a.Number_of_Cases__c - AccCaseNum;
+
+         for(Integer i=1;i<Total;i++){
+           Case cs=New Case(AccountId=a.id,Status='New',Origen='Web',Priority='High');
+           newCase.add(cs);
+         }
+    }
+
+    if(!newCase.isEmpty()){Insert newCase}
+
+   
+}
+==================================================================================
+Write A BatchClass to update  all Account Industry feild Finance.
+
+Public Class UpAccountIndustryBatchClass impeliment Database.Batchable<sObject>{
+
+   List<Account> UpdateListAccount=new List<Account>();
+    Public Database.queryLocator start(Database.BatchableContext bc){
+        string AccFields='SELECT id,Industry from Account';
+
+        Database.getquearyLocater(AccFields);
+    }
+
+    Public void execute(Database.BatchableContext bc,List<Account> acc){
+        try{
+            for(Account accList:acc){
+            accList.Industry='Finance';
+            UpdateListAccount.add(accList);
+            }
+           if(!accList.isEmpty()){update  accList;}
+        }
+        catct(Exception e){
+            system.debug(e.getMessage());
+        }
+    }
+
+    Public void finish(Database.BatchableContext bc){
+            system.debug('Batch Executed ');
+    }
+}
+
+Trigger AccOpertunutyCount on Opportunity(After insert){
+    set<Id> AccId =New set<Id>();
+    for(Opportunity op:Trigger.New){
+        if(op.AccountId != Null){
+            AccId.add(op.AccountId);
+        }
+    }
+    List<Account> AccountList=[SELECT id,description from Account WHERE AccountId IN AccId];
+    for(Account a: AccountList){
+        a.description = a.Opportunity.Size();
+    }
+    if(!AccountList.isEmpty()){Update AccountList}
+}
+
+
+
+=================================================================================================================
+Opportunity related to Account ,Whenever Opportunity Email__c update 
+then Update all Opportunitys Related to that Account .
+
+Trigger AccountOppEmails on Opportunity (After insert,After Update){
+   Map<Id,string>  AccountOppMap=New  Map<Id,string>();
+    for(Oppertunity opp:Trigger.New){
+        if(opp.AccountId != Null && opp.Email__c ! = Null){
+            AccountOppMap.put(opp.AccountId,opp.Email__c);
+        }
+    }
+
+    List<Opportunity> OpportunityToUpdateList=[SELECT Id,Email__c,AccountId FROM Opportunity 
+                                                  WHERE AccountId IN :AccountOppMap.KeySet()];
+
+    List<Opportunity> OpportunityToUpdateEmail = New List<Opportunity>();
+    for(Opportunity op:OpportunityToUpdateList){
+        string UpdatedEmail=AccountOppMap.get(op.AccountId);
+       if(op.Email__c != UpdatedEmail){
+          op.Email__c=UpdatedEmail;
+          OpportunityToUpdateEmail.add(op);
+       } 
+    }
+
+    if(!OpportunityToUpdateEmail.isEmpty()){Update OpportunityToUpdateEmail;}
+}
+
+========================================================================================
+Public accountShare class{
+    Public static void SharingMethod(string userId,string accountId,string accessLevel){
+        if(accessLevel != 'Read' && accessLevel != 'Edit'){
+            throw new IllegaleArgumentException('Illegale Argument Must be Read or Edit'); 
+        }
+
+        AccountShare accountSharing = new AccountShare();
+
+        accountSharing.AccessLevel=accessLevel;
+        accountShare.ParentId=accountId;
+        accountShare.UserorGroupId=userId;
+        accountShare.RowCause=Schema.AccountShare.RawCause.Manule;
+
+        try{
+            insert accountShare;
+        }
+        catch(DmlException e)
+        {
+            system.debug('Execption Happen '+e.getMessage());
+        }
+    }
+}
+
+==========================================================================================================
+Manage JSON - Response 
+public class JsonDataHandlerMimick {
+     // Simulate the JSON string (In real scenarios, you would get this from an API or external service)
+     
+    public static String jsonData = '{ "name": "Tejas Kamble", "version": 64.0, "status": true, "address": { "street": "Kalptaru Colleny House No 11", "zipcode": "700046" }}';
+   
+    // Define the Address class to represent the nested address object
+    public class Address {
+        public String street;
+        public String zipcode;
+    }
+
+    // Define the JsonData class to represent the main JSON structure
+    public class JsonData {
+        public String name;
+        public Double version;
+        public Boolean status;
+        public Address address;      
+    }
+
+    // Method to Chack and Debug and Return a list of values from the JSON data
+     @AuraEnabled( cacheable = true ) 
+
+    public static List<string> getJsonValues() {
+       
+        // Deserialize the JSON string into the JsonData class - ParSeing
+        JsonData jsonResponse = (JsonData) JSON.deserialize(jsonData, JsonData.class);  // convert the Json responce in to Apex, class called Parseing a Data
+               
+        List<String> valuesList = new List<String>();
+       
+        valuesList.add('Name: ' + jsonResponse.name);
+        valuesList.add('Version: ' + jsonResponse.version);
+        valuesList.add('Status: ' + jsonResponse.status);
+        valuesList.add('Street: ' + jsonResponse.address.street);
+        valuesList.add('Zipcode: ' + jsonResponse.address.zipcode);
+        return valuesList; 
+    }
+}
+
+============================================================================================
+
+Public Class JsonDataHandeler{
+     public static String jsonData = '{ "name": "Tejas Kamble", "version": 64.0, "status": true, 
+                      "address": { "street": "Kalptaru Colleny House No 11", "zipcode": "700046" }}';
+
+    Public class JsonDataCLS{
+        publis string name;
+        publis string version;
+        publis Boolean status;
+        publis Address address;
+    }
+    Public class Address{
+        publis string street;
+        publis string zipcode;
+    }
+
+    Public static List<string> getJsonValues(){
+        
+    JsonDataCLS jsonResponce =(JsonDataCLS) JSON.deserialize(jsonData,JsonDataCLS.class);
+    
+    List<string> Valusejson=New List<string>();
+
+       Valusejson.add(jsonResponce.name);
+       Valusejson.add(jsonResponce.version);
+       Valusejson.add(jsonResponce.status);
+       Valusejson.add(jsonResponce.address.street);
+       Valusejson.add(jsonResponce.address.zipcode);
+
+       return Valusejson;
+    }
+}
+
+============================================================================================================
+Senario(create method) :
+deals/dealname?utm_source=facebook&utm_medium=social&utm_campaign=15MayUnforgettable_bali
+
+write an apex method that will take string as an argument and should return the map of utmtags and values
+In this case your map will have 3 items, 
+
+utm_source=facebook, utm_medium=social, utm_campaign=15MayUnforgettable_bali
+
+ create an Apex method that takes a string as an argument and returns a 
+ Map<String, String> with the utm tags and their corresponding values,
+
+public class UTMParser {
+
+    public static Map<String, String> parseUTM(String url) {
+        
+        Map<String, String> utmParams = new Map<String, String>();
+        
+        // Check if the input URL contains the 'utm_' parameters
+        if (String.isNotBlank(url)) {
+            // Split the URL by '?' to get the query parameters part
+            String[] urlParts = url.split('\\?');
+            
+            // If there are query parameters in the URL
+            if (urlParts.size() > 1) {
+                String queryParams = urlParts[1];
+                
+                // Split the query parameters by '&'
+                String[] paramPairs = queryParams.split('&');
+                
+                // Iterate over each key-value pair in the query parameters
+                for (String pair : paramPairs) {
+                    // Split each pair by '=' to get the key (utm_tag) and value
+                    String[] keyValue = pair.split('=');
+                    
+                    // If it's a valid key-value pair and the key starts with 'utm_'
+                    if (keyValue.size() == 2 && keyValue[0].startsWith('utm_')) {
+                        utmParams.put(keyValue[0], keyValue[1]);
+                    }
+                }
+            }
+        }
+        
+        // Return the map of UTM parameters
+        return utmParams;
+    }
+}
+============================================================================
+Trigger AccountCase on Account (After Insert){
+    map<id,Account> accMap=new map<id,Account>();
+    for(Account acc:Trigger.New)(){
+        if(acc.Number_of_Cases__c != Trigger.oldMap.get(acc.Id).Number_of_Cases__c){
+            accMap.put(acc.Id,acc);
+        }
+    }
+     map<id,Integer> AccCaseCount=new map<id,Integer>();
+
+     List<AggregateResult> Agg=[SELECT AccountId,COUNT(Id) caseCount FROM Case 
+                                       WHERE AccountId IN accMap.KeySet() 
+                                       GROUP BY AccountId];
+
+    for(AggregateResult ager: Agg){
+        AccCaseCount.put((Id)ager.get('AccountId'),(Integer)ager.get('caseCount'));
+    }
+     
+     List<Case> cases=New List<Case>();
+    for(Account a:Trigger.New){
+        Integer Totel=(AccCaseCount.get(a.Id) != Null ? AccCaseCount.get(a.Id) : 0);
+        Integer NumberofCase=a.Number_of_Cases__c - Totel;
+
+        for(Integer i=0;i<Totel;i++){
+            case caseNew= New Case(AccountId = a.Id,Origen='Web',Status='New',Priority='Low');
+            cases.add(caseNew);
+        }
+
+        if(!cases.isEmpty()){Insert cases}
+
+    }
+
+}
+===========================================================================================
+Trigger AccountconPhaone on Account(After update){
+    map<id,Account>accMap=new map<Id,Account>();
+
+    for(Account a: Trigger.New){
+        if(a.Phone != Trigger.oldMap.get(a.Id).Phone){
+            accMap.put(a.Id,a);
+        }
+    }
+    List<Contact>contactList=[SELECT Id,Phone,AccountId from contact WHERE AccountId IN accMap.Keyset()];
+
+    for(contact con:contactList){
+        con.Phone=Trigger.nawMap.get(con.AccountId).Phone;
+    }
+    if(!contactList.isEmpty()){update contactList;}
+}
+=================================================================================
+Trigger AccountCaseCount on Account(After insert){
+      map<id,Account>accMap=new map<Id,Account>();
+
+    for(Account a: Trigger.New){
+        if(a.Number_of_Cases__c != Trigger.oldMap.get(a.Id).Number_of_Cases__c){
+            accMap.put(a.Id,a);
+        }
+    } 
+
+    map<Id,Integer> AccCaseCount= new map<Id,Integer>();
+
+    List<AggregateResult> aggregate=[SELECT AccountId,COUNT(Id) caseCount 
+                                            WHERE AccountId IN accMap.keySet() 
+                                            GROUP By AccountId];
+    for(AggregateResult agr:aggregate){
+        AccCaseCount.put((Id)agr.get('AccountId'),(Integer)agr.get('caseCount'));
+    }
+    List<Case> newCases= newList<Case>();
+
+    for(Account acc:Trigger.New){
+        Integer AccCases= (AcccaseCount.get(acc.Id) != Null ? AcccaseCount.get(acc.Id) : 0);
+        Integer TotelCount= Number_of_Cases__c - AccCases;
+        
+        for(Integer i=0;i<TotalCount ; i++){
+            Case cases=new Case(AccountId=acc.id,Priority='Low',status='New');
+            newCases.add(cases);
+        }
+    }
+
+    if(!newCases.isEmpty()){insert newCases;}
+
+}
+========================================================================================
+Trigger ContactCount on Contect(After insert){
+    set<Id>contactIds=new set<Id>();
+    for(contact con:Trigger.New){
+        if(con.AccountId != Null){
+            contactIds.add(con.AccountId);
+        }
+    }
+    List<Account>AccList=[SELECT Id,Desc from Account Where ID IN : contactIds];
+
+    for(Account a: AccList){
+        a.Desc=a.contact.Size();
+    }
+    if(!AccList.isEmpty()){update AccList}
+}
+=============================================================================================
+if opportunity name is Updated then Update All opportunitys name of that related Account
+Trigger OpportunityName on Oppertunity(After Update){
+
+    set<Id>AccountsIds=new set<Id>();
+    string nameofOpportunity;
+    for(Opportunity opp:Trigger.New){
+        if(opp.AccountId != Null && opp.Name != Trigger.oldMap.get(opp.id).Name){
+            AccountsIds.add(opp.AccountId);
+            nameofOpportunity=opp.Name;
+        }
+    }
+
+    List<Opportunity>OpportuintyList=[SELECT id ,AccountId,Name FROM Opportunity WHERE AccountId IN :AccountsIds];
+
+    for(Oppertunity op:OpportuintyList){
+        op.Name=nameofOpportunity;
+    }
+
+}
+========================================================================================
+import {LightningElement,wire} from 'lwc'
+import {DeleteRecord} from'lightning/uiRecordApi';
+import getListUi from 'lightning/uiListApi';
+import Account_Objaet from'@salesfroce.schema/Account';
+
+COLUMNS=[{label:'Name',fieldName:'Name'},{label:'Phone',fieldName:'Phone'},{label:'website',fieldName:'website'}];
+
+export default DeleteMultipleAccounts extends LightningElements{
+    col=COLUMNS;
+    accountData=[];
+    SelectedRowMapData=[];
+
+    pageToken=null;
+    priousPageToken=null;
+    nextPageToken=null;
+
+    @wire(getListUi,
+    {
+        objectApiName=Account_Objaet,
+        ListViweApiName=AllAccount,
+        pageToken='$pageToken',
+        sortBy='Neme',
+        PageSize=10
+    })
+    handelWire(){
+        if(data){
+            this.nextPageToken=data.records.nextPageToken;
+            this.priousPageToken=data.records.priousPageToken;
+
+            this.accountData=data.records.records.map(records=>(
+             {
+                Id=records.Id,
+                Name=records.fields.Name.value,
+                Phone = records.fields.Phone ? records.fields.Phone.value : '',
+                website = records.fields.website ? records.fields.websits.value : ''
+            }));
+        }
+        else if(error){console.error('Error ',error);}
+    }
+    HandelNextPage(e){
+        this.pageToken=this.nextPageToken;
+    }
+    handelPrious(e){
+        this.pageToken=this.priousPageToken;
+    }
+
+    HandelRowSelection(event){
+        const selectedRows = event.detail.selectedRows;
+        if(selectedRows > 0){
+             this.SelectedRowMapData= selectedRows.map(row => row.id);
+             this.desableDeleteButton = this.SelectedRowMapData === 0;
+        }
+    }
+
+    HandelDelete(){
+        const promeses = this.SelectedRowMapData.map(id =>{
+        return deleteRecord(id)
+        .then(()=>{ ShowTost('Success','Delete Record ${id}','success')})
+        .catch(error=>{ShowTost('error','Error on Delete ${id}','error')})
+      })
+
+      Promess.All(promeses)
+      .then(()=>{
+        this.SelectedRowMapData=[];
+        this.accountData = this.accountData.filter(account => !this.SelectedRowMapData.includs(account.id));
+        refrishApex(this.accountData);
+      })
+
+      ShowTost(titel,message,vairant){
+        const event = new showToastEvent({
+            titel=titel,
+            message=message,
+            vairant=vairant
+        })
+        this.dispatchEvent(event);
+      }
+    }
+}
+================================================================
+
+import {LightningElements,wire} from 'lwc'
+import {getListUi}from 'lightning/ListUiApi';
+import {deleteRecord} from 'lightning/uiRecordApi';
+
+COLUMNS=[{label:'Name',FieldName:'Name'},{label:'Indutry',fieldName:'Industry'},{label:'Phone',fieldName:'Phone'}];
+
+export defaule DeleteAccountwithListViwe extends LightningElements{
+    col=COLUMNS;
+    accountData=[];
+    selectedAccounts=[];
+
+    nextPageToken=null;
+    priousPageToken=null;
+    pageToken=null;
+
+    @wire(getListUi,{
+        ObjectApiName:'Account',
+        ListViewApiName:'AllAccount',
+        pageToken:'$pageToken',
+        shortBy:'Name',
+        pageSize:10
+    })
+    wireHandelMaehod({data,error}){
+        if(data){
+          this.nextPageToken=data.records.nextPageToken;
+          this.priousPageToken=data.records.priousPageToken;
+  
+         this.accountData=data.records.records.map(records=>({
+            Id=records.Id,
+            Name=records.fields.Name.value,
+            Industry=records.fields.Industry ? records.fields.Industry.value:'',
+            website=records.fields.website ? records.fields.website.value:'' 
+         }));
+        }
+    }
+
+    HandenextPageToken(e){
+        this.pageToken=this.nextPageToken;
+    }
+    HandelpriousPageToken(e){
+        this.pageToken=this.priousPageToken;
+    }
+    handelRowSelection(event){
+        const selectedRows= event.detail.selectedrows;
+        if(selectedRows > 0){
+            this.selectedAccounts=this.selectedRows.map(row=>row.id);
+            this.desableDelete = this.selectedAccounts.length === 0;
+        }
+    }
+
+    handelDelete(){
+        const promeses=this.selectedAccounts.map(id=>{
+            return deleteRecord(id)
+            .then(()=>  {
+                  ShowTost('Success','Records Deleted Successfully ${id} :','success');
+            })
+            .catch(error=>{
+                 ShowTost('Error',`Error on Records Delete ${id} ${error.Body.getMessage}`,'success');
+            })
+        })
+          Promise.All(promeses)
+            .then(()=>{
+                this.selectedAccounts=[];
+                this.accountData= this.accountData.filter(account => ! this.selectedAccounts.includes(account.id));
+                refreshApex(this.accountData);
+            });
+    }
+
+    ShowTost(mytitel,myMessage,myVairent){
+        const event= new showTostEvent({
+            titel:mytitel,
+            message:myMessage,
+            vairent:myVairent
+        })
+       this.despatchEvent(event);
+        
+    }
+  
+}
+==============================================================================================
+import {lightningelement,wire} from 'lwc'
+import {getListUi} from 'lightning/uiListApi';
+import {deleteRecord} from 'lightning/uiRecordApi';
+
+COLUMNS=[{label:'Name',fieldNmae:'Name'},{label:'website',fieldNmae:'website'},{label:'Phone',fieldNmae:'Phone'}];
+
+export defaule myDeleteList extends LightningElement{
+    col=COLUMNS;
+    accountData=[];
+    desableDelete=true;
+
+    selectedRowsDelete=[];
+    pageToken=null;
+    nextPageToken=null;
+    priousPageToken=null;
+
+    @wire(getListUi,{
+        objectApiName:'Account',
+        listViewApiName:'AllAccounts',
+        sortBy:'Name',
+        pageSize:10,
+        PageToken:"$pageToken",
+    })
+    handelWireMethod({data,error}){
+       if(data){
+            this.nextPageToken=data.records.nextPageToken;
+            this.priousPageToken=data.records.priousPageToken;
+
+            this.accountData =data.records.records.map(record=>({
+                Id:record.id,
+                Name:record.fields.Name.value,
+                website:record.fields.website ? record.fields.website.value :'',
+                Phone:record.fields.Phone ? record.fields.Phone.value :'',
+            }))            
+       }
+       else if(error){
+        console.log('Error in Data'+ error);
+       }
+    }
+    HandelNextButton(e){
+        this.pageToken= this.nextPageToken;
+    }
+    HandelPriousPage(e){
+        this.pageToken=this.priousPageToken;
+    }
+
+    HandelSelection(event){
+        const selectedRows= event.detail.selectedRows;
+        if(selectedRows > 0){
+         this.selectedRowsDelete=selectedRows.map(row => row.id);
+         this.desableDelete= this.selectedRowsDelete.length === 0;
+        }
+    }
+
+    HandelDeleteButton(){
+        const promises=  this.selectedRowsDelete.map(id => {
+            return deleteRecord(id)
+            .then(()=>{
+                 ShowTost('Success',`Records Deleted Successfully ${id} :`,'success');
+            })
+            .catch(error => {
+                ShowTost('Error',`Error in Deleteing Records ${id} ${error.body.message}`,'error');
+            })
+        })
+
+        Promise.All(promises)
+        .then(()=>{
+            this.accountData= this.accountData.filter(record => !this.selectedRowsDelete.includs(record.id));
+            refreshApex(this.accountData);
+            this.selectedRowsDelete=[];
+        })
+
+        ShowTost(mytitel,myMessage,vairent){
+            const event= New showToastEvent({
+                titel:mytitel,
+                message:myMessage,
+                vairant:myVairent
+            });
+            this.dispatchEvent(event);
+        }
+    }
+}
+
+Q) When an account's phone is equal to contact's phone it should not allow how will you implement?
+
+Trigger AccPhoneChack on Account(Before insert,Before Update){
+ 
+ set<Id>accountIds=new set<Id>();
+ for(Account a:Trigger.new){
+    if(a.Phone != Null){
+     accountIds.add(a.id);
+    }
+ }
+ list<contact>conList=[SELECT AccountId,id,Phone from contact WHERE AccountId IN :accountIds];
+ map<id,string>contactPhoneMap=new map<Id,string>();
+ for(contact con:conList){
+    if(con.Phone != Null){
+        contactPhoneMap.put(con.AccountId,con.Phone);
+    }
+ }
+
+ for(Account a:Trigger.New){
+    if(a.Phone !=Null && contactPhoneMap.containsKey(a.Id) && contactPhoneMap.get(a.id)== a.Phone){
+        a.Phone.addError('The Account Phone cannot be the same as the Phone of any related Contact.');
+    }
+ }
+}
+
+Trigger on PhoneSame on Account(Before insert,Before Update){
+    set<Id>accId=New Set<Id>();
+
+    for(Account accounts:Trigger.New){
+        if(accounts.Phone != Null){
+            accId.add(accounts.Id);
+        }
+    }
+    List<Contact> contactList=[SELECT Id,AccountId,Phone FROM Contact WHERE AccountId IN :accId];
+
+    Map<Id,String>Phonemap=New Map<Id,String>();
+
+    for(Contact con : contactList){
+        Phonemap.put(con.AccountId,con.Phone);
+    }
+    for(Account acc:Trigger.New){
+        if(Phonemap.containsKey(acc.Id) && acc.Phone == Phonemap.get(acc.Id).Phone){
+            acc.addError('Error');
+        }
+    }
+}
+================================================================================================
+Trigger  on Contact
+
+Q) When an opportunity is closed won make every Opportunity products are read only?
+
+trigger OppProductsReadOnly on OpportunityLineItems(Before Update)
+{
+    set<Id> oppIds=New set<Id>();
+    for(OpportunityLineItems opItems:Trigger.New){
+        if(opItems.OpportunityId != Null){
+            oppIds.add(opItems.OpportunityId);
+        }
+    }
+
+    map<Id,Opportunity> OppMap=New Map<Id,Opportunity>([SELECT Id,StageName FROM Opportunity WHERE ID IN : oppIds]);
+    for(OpportunityLineItems op:Trigger.New){
+        opportunity Opp= OppMap.get(op.OpportunityId);
+
+        if(Opp.stageName == 'Closed Own'){
+            op.addError('Can Not update OpportunityLineItem Becouse Opportunity is Closed Own');
+        }
+    }
+}
+===========================================================================================================
+
+===========================================================================================================
+Batch Class
+Q) Account have Active__c field True, if Account dont have Acctivity Last 180 days then Active__c=False
+   .DiActivate that Account which dont have Acctivity Last 180 days...
+
+Public Class diActivateAccount implimentes Database.Batchable <sObject>
+{
+    public Database.QuearyLocater start(Database.BatchableContext bc){
+        String query=[SELECT Id,Name,Active__c,LastActivityDate FROM Account 
+                        WHERE LastActivityDate < LAST_N_DAYS:180 AND Active__c = true];
+
+        return Database.getQuearyLocater(query);
+    }
+
+    public void execute(database.BatchableContext bc,List<Account> accRecords){
+     List<Account> AccountList=New List<Account>();
+     for(Account acc:accRecords){
+        acc.Active__c=false;
+        AccountList.add(acc);
+     }
+     if(!AccountList.isEmpty()){update AccountList;} 
+    }
+
+    public void finish(Database.BatchableContext bc){
+        // debug
+    }
+}
+
+Public Class diActivateAccountShadule implements Shaduleable
+{
+    Public void execute(ShaduleableContext sc)
+    {
+        diActivateAccount batchObj= new diActivateAccount();
+        Database.execute(batchObj);
+    }
+}
+
+string cron='0 0 0 * * ?'; // s ms hour day month year 
+
+diActivateAccountShadule myShaduleJob = new diActivateAccountShadule();
+
+System.Shadule('My Shadule Job 1',cron,myShaduleJob);
+
+
+======================================================================================================
+Update Field After 5 min
+trigger AccountTrigger on Account (after insert) {
+    List<Account> newAccounts = new List<Account>();
+    for (Account acc : Trigger.new) {
+        if (acc.Status__c == 'New') {
+            newAccounts.add(acc);
+        }
+    }
+    if (!newAccounts.isEmpty()) {
+        AccountStatusScheduler.scheduleJob(newAccounts);
+    }
+}
+
+public class AccountStatusScheduler implements Schedulable {
+    private List<Id> accountIds;
+
+    public AccountStatusScheduler(List<Id> accountIds) {
+        this.accountIds = accountIds;
+    }
+
+    public void execute(SchedulableContext sc) {
+        List<Account> accountsToUpdate = [SELECT Id, Status__c FROM Account WHERE Id IN :accountIds];
+        for (Account acc : accountsToUpdate) {
+            acc.Status__c = 'Processing';
+        }
+        update accountsToUpdate;
+    }
+
+    public static void scheduleJob(List<Account> accounts) {
+        List<Id> accountIds = new List<Id>();
+        for (Account acc : accounts) {
+            accountIds.add(acc.Id);
+        }
+        AccountStatusScheduler scheduler = new AccountStatusScheduler(accountIds);
+        String cronExp = System.now().addMinutes(5).format('s m H d M \'?\' yyyy');
+        System.schedule('Update Account Status to Processing', cronExp, scheduler);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

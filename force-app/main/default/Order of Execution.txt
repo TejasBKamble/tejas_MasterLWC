@@ -1,0 +1,54 @@
+Order of Execution Trigger    
+
+Step 1:  Load the original record or initialize on insert.
+
+Step 2: Override the old record values with the new values.
+
+Step 3: Execute all before triggers.
+
+Step 4: Run the system & user-defined validation rules.
+
+Step 5: Save the record but do not commit the record to the database.
+
+Step 6: Execute all after triggers.
+
+Step 7: Execute the assignment rules.
+
+Step 8: Execute the auto-response rules.
+
+Step 9: Execute the workflow rules.
+
+Step 10:  If there are workflow field updates then execute the field update.
+
+Step 11: If the record was updated with a workflow field update then execute before and after triggers created on the object in the context again but only once.
+
+Step 12: Execute the processes and flows on that record.
+
+Step 13: Execute the escalation rules.
+
+Step 14: Update the roll-up summary fields & cross-object formula fields.
+
+Step 15: Repeat the same process with the affected parent or grand-parent records.
+
+Step 16: Evaluate criteria-based sharing rules.
+
+Step 17: Commit all DML operations to the database.
+
+Step 18: Execute post commit logic such as sending emails.  make the good image of this steps
+
+
+
+
+. Order of Execution
+The order in which triggers execute in Salesforce is predefined and can sometimes lead to unexpected behavior. The general order of operations during a DML operation is:
+
+Validation Rules
+Before Triggers
+Duplicate Rules
+After Triggers
+Assignment Rules
+Auto-Response Rules
+Workflow Rules
+Escalation Rules
+Roll-Up Summary Fields
+After Save operations (e.g., email alerts, field updates, etc.)

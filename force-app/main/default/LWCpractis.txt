@@ -1,0 +1,889 @@
+ <lightningMessageFields> 
+
+        <fieldName> massagefromParent </fieldName> 
+        <description>This is the record Id of Account</description> 
+
+ </lightningMessageFields> 
+ MessageChannel/messageChannelName.messageChannel-meta.xml 
+
+ Publisher LWC
+ import {publish,ApplitionScop,MessageContext} from 'lightning/messageService';
+ import messageChannelName from '@Salesforce/messageChannel/messageChanelName';
+
+ export default PublisherLWC extends lightningElement{
+    message='Message from Publisher';
+
+    @wire(MessageContext)
+    WireMessageContext
+    const Payload={massagefromParent:this.message;}
+    Publish(this.WireMessageContext,messageChanelName,{Payload});
+ }
+========================================================================================
+Subscriber LWC
+
+import {MessageContext,ApplicationScop,Subscribe,Unsubscribe} from 'lightning/messageChannel'
+import messageChanelName from '@Salesforce/MessageChannel/messageChanelName';
+
+export default SubscriberLWC extend lightningElement{
+    messageReciver='';
+    @Wire(MessageContext) msgContext;
+
+    ConnectedCallBack(){
+        this.SubscribeHandeler();
+    }
+
+    SubscribeHandeler(){
+        if(!this.Subscribetion){
+            this.Subcsribetion = Subscribe(
+                this.msgContext,
+                messageChanelName,
+                (message)=>this.MessageHandelre(message),
+                {scope:APPLICATION_SCOPE}
+                );
+        }
+    }
+    MessageHandelre(msg){
+        this.messageReciver=msg.massagefromParent;
+    }
+}
+========================================
+ P to c
+
+ chieldLWC
+ JS
+ @api msgData;
+ 
+ Html
+ <template> <p>Data : {msgData}</p></template>
+
+Parent
+Html
+<lightning-input label="Enter Value" value={massageData} onChange={HandelCange}></
+<chield-lwc msgData={massageData}> </chield-lwc>
+
+JS
+massageData=0;
+HandelCange(event){
+ this.massageData=event.target.value;
+}
+
+=== C to p
+childLWC
+msgData='This from Child';
+
+    HandelButton(){
+      this.dispatchEvent(New CustomEvent('msgchild',{detail:this.msgData});)
+    }
+
+Parect
+Html
+<p>Data from Chile : {msg}</p>
+<child-lwc onmsgchild={msgHandeler}></chield-lwc>
+
+JS
+msg='';
+msgHandeler(event){
+ this.msg=event.detail;
+}
+
+================================================================
+SOQL return Account with no Contacts
+SELECT Id,Name From Account WHERE ID NOT IN (SELECT AccountId From contact)
+
+SOQL Account data With related Numbers of Contacts
+SELECT COUNT(Id) ,AccountId,Account.Name from Contact GROUP By AccountId,Account.Name
+
+SOQL Accounts Only 1 Related Contact
+SELECT AccountId,Account.Name from Contact GROUP By AccountId,Account.Name HAVING COUNT(Id) = 1
+
+SOQL to Highest Opportunity Amount
+SELECT Id,Name,Amount from Opportunity WHERE Amount != Null ORDER By Amount DESC LIMIT 1
+
+SOQL Account with Second Highest Oppertunity Amount
+SELECT AccountId,Id,Amount from Opportunity WHERE Amount != Null ORDER By Amount DESC LIMIT 1 OFFSET 1  
+
+write a query to get all the Account where more than one record exists with same name and name contains “test”
+SELECT Name,COUNT(Id)
+FROM Account
+WHERE Name LIKE '%test%' GROUP BY Name HAVING COUNT(Id) > 1 ORDER BY Name
+
+write a query to get all the Opportunities with id and name column 
+where opportunity name contains 'Test' and sort this list by Name
+SELECT Name,Id
+FROM Account
+WHERE Name LIKE '%test%' GROUP BY Name,Id ORDER BY Name 
+=============================================================================================================
+ Chield to Grand-Parent 
+
+ ChildLWC
+ messagechield='Message from Chield 699';
+    HandelClick(){
+       
+
+          this.dispatchEvent(new CustomEvent("notification",{
+            detail:this.messagechield,
+            bubbles:true,
+            composed:true
+        }));
+    }
+ParentLWC
+    <template>
+        <lightning-card title="Parent Bubble and Composed"></lightning-card>
+        <c-chield-l-w-c onnotification={handelNotification}></c-chield-l-w-c>
+    </template>
+
+  handelNotification(event){
+        console.log('Event from Chield',event.detail);
+  }
+
+Grand-Parent LWC
+<template>
+    <lightning-card title="Grand Parent Bubble and Composed">
+        <p>{captureData}</p>
+    </lightning-card>
+    <c-parent-l-w-c onnotification={handleOuterClick}></c-parent-l-w-c>
+</template>
+
+@track captureData='';
+
+    handleOuterClick(event) {
+
+         this.captureData=event.detail;
+        this.dataR=this.captureData;
+    }
+
+==================================================================================================
+public class ExternalSystemIntegration {
+    
+    public static String getExternalData(String recordId) {
+     
+        String endpointUrl = 'https://api.example.com/data';  
+     
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(endpointUrl + '?recordId=' + recordId);  // Assuming the API accepts recordId as a query parameter
+        req.setMethod('GET');  // HTTP GET method
+        req.setHeader('Content-Type', 'application/json');
+        
+        req.setHeader('Authorization', 'Bearer YOUR_ACCESS_TOKEN');  // Replace with actual token
+
+        Http http = new Http();
+        HttpResponse res = http.send(req);
+        
+        if (res.getStatusCode() == 200) {
+            // Process and return the response body
+            return res.getBody();
+        } else {
+            // Handle errors or unsuccessful responses
+            System.debug('Error: ' + res.getStatusCode() + ' ' + res.getBody());
+            return null;
+        }
+    }
+}
+=========================================================================================================
+
+HttpRequest req= new HttpRequest();
+
+req.setEndpoint('xyz.com'+'?recordId='+recordId);
+req.setMethod('GET');
+req.setHeader('Contect-type','Application/Json');
+
+req.setHeader('Authorization','Bearer YOUR_ACCESS_TOKEN');
+ 
+Http hp=New Http();
+HttpResponse response= hp.send(req);
+
+if(responce.getStatusCode()==200){
+  return  responce.getBody();
+}
+else{
+    system.debug('Error '+getStatusCode());
+}
+
+==============================================================================
+Active__c fiend on Account if Account Don't Have an Acctivity last 180 days then diActivate it Active__c = false;
+
+global class InactiveAccountBatch implements Database.Batchable<sObject> {
+    global Database.QueryLocator start(Database.BatchableContext BC) {
+        String query = 'SELECT Id FROM Account WHERE LastActivityDate < LAST_N_DAYS:180 AND Active__c = true';
+        return Database.getQueryLocator(query);
+    }
+
+    global void execute(Database.BatchableContext BC, List<Account> scope) {
+        for (Account acc : scope) {
+            acc.Active__c = false;
+        }
+        update scope;
+    }
+
+    global void finish(Database.BatchableContext BC) {
+        // Optional: Add any post-processing logic here
+    }
+}
+
+global class InactiveAccountScheduler implements Schedulable {
+    global void execute(SchedulableContext sc) {
+        InactiveAccountBatch batch = new InactiveAccountBatch();
+        Database.executeBatch(batch);
+    }
+}
+
+String cronExp = '0 0 0 * * ?'; // This cron expression schedules the job to run daily at midnight
+InactiveAccountScheduler scheduler = new InactiveAccountScheduler();
+System.schedule('Inactive Account Job', cronExp, scheduler);
+
+=============================== HTTP ===================================================
+public class ExternalSystemIntegration {
+    // Method to send recordId and retrieve data from the external system
+    public static String getExternalData(String recordId) {
+        // Define the endpoint URL of the external system's API
+        String endpointUrl = 'https://api.example.com/data';  // Replace with actual API URL
+       
+        // Create the HTTP request
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(endpointUrl + '?recordId=' + recordId);  // Assuming the API accepts recordId as a query parameter
+        req.setMethod('GET');  // HTTP GET method
+        req.setHeader('Content-Type', 'application/json');
+        
+        // Optionally add an authorization header if required
+        req.setHeader('Authorization', 'Bearer YOUR_ACCESS_TOKEN');  // Replace with actual token
+
+        // Create an HTTP object to send the request
+        Http http = new Http();
+        HttpResponse res = http.send(req);
+        
+        // Check if the response was successful (status code 200)
+        if (res.getStatusCode() == 200) {
+            // Process and return the response body
+            return res.getBody();
+        } else {
+            // Handle errors or unsuccessful responses
+            System.debug('Error: ' + res.getStatusCode() + ' ' + res.getBody());
+            return null;
+        }
+    }
+}
+
+===================================================================================
+
+Public Class myCalloutgetRecord
+{
+    Public static string getRecordsHttp(string recordId)
+    {
+        string endPointUrl='xyz.com';
+
+        HttpRequest req=New HttpRequest();
+        req.setEndPoint(endPointUrl+'?recordId='+recordId);
+        req.setMethod('GET');
+        req.setHeader('content-Type','Application/json');
+        req.setHeader('Authrozation','Berer Your_Token');
+
+        Http hp=New Http();
+         HttpResponce respoce=hp.send(req);
+
+        if(respoce.getStatusCode == 200){
+            return respoce.getBody();
+        }
+        else 
+        {
+            system.debug('Error in Collout'+respoce.getStatusCode);
+        }
+    }
+
+    LWC 
+
+    recordData=[];
+    recordId='';
+
+    handelChange(event){
+        this.recordId=event.target.value;
+    }
+
+    async buttonClick(){
+       try{
+           this.recordData = await getRecordsHttp({recordId:this.recordId});
+       }
+       catch(error){
+         console.log(error);
+       }
+    }
+}
+
+========================================================================
+Account have Active__c field if Account Dont have any Activity last 180 days the DiActivate it;
+
+Public Class ActiveBatch implementes Database.batchable<sObject>
+{
+    public Database.queryLocater start(Database.batchableContext bc){
+        string query='SELECT Id,Active__c,LastActivityDate FROM Account WHERE LastActivityDate < LAST_N_DAYS:180';
+        return getQueryLocater(query);
+    }
+
+    public void execute(Database.BatchableContext bc,List<Account> scope){
+       List<Account> AccUpdateList =New List<Account>();
+       for(Account acc:scope){
+        acc.Active__c= false;
+        AccUpdateList.add(acc);
+       }
+       update AccUpdateList;
+    }
+
+    public void finish(Database.BatchableContext bc){
+
+    }
+}
+
+Public Class myShaduleerClass implements Schedulable
+{
+    Public void execute(ShaduleableContext sc){
+        ActiveBatch AB= New ActiveBatch();
+        Database.executeBatch(AB);
+    }
+}
+string corn='0 0 0 * * *'
+myShaduleerClass shd= New myShaduleerClass();
+System.shadule('My Shadule',corn,shd);
+========================================================
+
+
+
+<template>
+    <lightning-card title="Account Add and Delete">
+        <template if:true={ArrayLength}> Condition to chack Array Length
+            <template for:each={ArrayLength} for:item="arr" for:index="ArrIndex"> Loop through each element
+                <div key={arr}>
+                    <lightning-record-form 
+                        object-api-name="Account"
+                        fields={AccountsFieldas}
+                        columns="4"
+                        onsuccess={HandaleSuccess}> Record form to create Account Record 
+                    </lightning-record-form>
+                </div>
+            </template>   
+            <lightning-button      
+                label="Delete" 
+                onclick={HandelDelete} 
+                disabled={isDeleteButtonDisabled}> Disable the delete button if there are no records to delete
+            </lightning-button>
+        </template>
+        <lightning-button 
+            label="Add" 
+            onclick={HandelAdd}>
+        </lightning-button>
+    </lightning-card>
+</template>
+=========================================
+
+<template>
+ <lightning-card titel='Add and delete'>
+   <template if:true={ArrayLength}>
+     <template for:each={ArrayLength} for:item="arr" for:index="ArrayIndex">
+      <div key={arr}>
+        <lightning-record-form 
+            object-api-Name={Account}
+            fields={AccountFields}
+            columns="4"
+            onsuccess={HandeSuccess}>
+        </lightning-record-form>
+      </div>
+     </template>
+
+     <lightning-button 
+            Label="Delete Account"
+            disabled={handelDisabled} 
+            onClick={DeleteHandel}>
+      </lightning-button>
+
+   </template>
+      <lightning-button 
+            Label="Add Account"
+            onClick={HandelADD}>
+      </lightning-button>
+ </lightning-card>
+</template>
+=====================================================================================
+import {lightningElement,track} from 'lwc'
+import AccountName from '@salesforce/schema/Account.Name';
+import AccountIndustry from '@salesforce/schema/Account.Industry'
+import AccountPhone from '@salesforce/schema.Account.Phone';
+import DeleteRecord from 'lightning/uiRecordApi'
+
+export default myLWC extend lightningElement{
+    @track ArrayLength=[0];
+    @track recordsIds=[];
+    AccountFields=[AccountName,AccountPhone,AccountIndustry];
+
+    HandelADD(){
+      const newIndex=this.ArrayLength.length;
+      this.ArrayLength=this.ArrayLength[...this.ArrayLength,newIndex];
+    }
+
+    HandeSuccess(event){
+      const newId=event.detail.Id;
+      this.recordsIds=[...this.recordsIds,newId];
+      alert('Record Created'+newId);
+    }
+   
+    DeleteHandel(){
+        if(this.recordsIds.length > 1)
+        {
+        const lastRecordId= this.recordsIds[this.recordsIds.length - 1 ];
+        
+        DeleteRecord(lastRecordId)
+        .then(()=>{
+             this.recordsIds= this.recordsIds.slice(0,this.recordsIds.length-1);
+             this.ArrayLength=this.ArrayLength.slice(0,this.ArrayLength.length - 1);
+              alert('Record Deleteed);
+        })
+        .catch(error=>{
+                    console.error('Error while Deleting Record',error);
+                     alert('Error while Delete');
+        })
+     }
+    }
+
+    get handelDisabled(){
+          return this.recordsIds.length===0;
+    }
+
+}
+
+
+==================================================
+
+import { LightningElement, track} from 'lwc';
+import AccountName from '@salesforce/schema/Account.Name';
+import AccountPhone from '@salesforce/schema/Account.Phone';
+import {deleteRecord } from 'lightning/uiRecordApi';
+
+export default class AddandDeleteAccountRow extends LightningElement {
+    @track ArrayLength = [0];  // Holds the "indexes" for the added forms
+    @track recordIds = [];  // Holds the record IDs of the created Account records
+    AccountsFieldas = [AccountName, AccountPhone];
+
+    // Add a new form when the Add button is clicked
+    HandelAdd() {
+        const newIndex = this.ArrayLength.length; 
+        this.ArrayLength = [...this.ArrayLength, newIndex];  
+    }
+
+    // Handler to handle success event when a record is created
+    HandaleSuccess(event) {
+        const newRecordId = event.detail.id;  
+        this.recordIds = [...this.recordIds, newRecordId]; 
+        alert('Record is Created. ID: ' + newRecordId);
+    }
+
+    HandelDelete() {
+        if (this.recordIds.length > 1) {
+          
+            const lastRecordId = this.recordIds[this.recordIds.length - 1];
+        
+            deleteRecord(lastRecordId)
+                .then(() => {
+                    this.recordIds = this.recordIds.slice(0, this.recordIds.length - 1);
+                    this.ArrayLength = this.ArrayLength.slice(0, this.ArrayLength.length - 1);
+                    alert('Record Deleted');
+                })
+                .catch(error => {
+                    console.error('Error deleting record: ', error);
+                    alert('Error deleting record');
+                });
+        }
+    }
+   
+    get isDeleteButtonDisabled() {
+        return this.recordIds.length ===0; 
+    }
+}
+
+
+=====================================================================================================
+
+<template>
+ <lightning-card titel="Account Add and Delete">
+ <template if:true={ArrayLenght}>
+  <template for:each={ArrayLenght} for:item="arr" for:Index="itemIndex">
+    <div key={arr}>
+     <lightning-record-form 
+     object-api-name="Account"
+     fields={AccountFields}
+     columns="4"
+     onsuccess={HandelSuccess}>
+     </>
+    </div>
+  </template>
+  <lightning-button onClick={HandelDelete} disabled={isDisabled} Label="Delete Account"></>
+ </template>
+   <lightning-button onClick={HandelAdd} Label="Add Account"/>
+ </lightning-card> 
+</template>
+
+import {lightningElement,track} from 'lwc'
+import AccountName from '@salesforce/schema/Account.Name'
+import AccountPhone from '@salesforce/schema/Account.Phone'
+import AccountIndustry from '@salesforce/schema/Account.Industry'
+import deleteRecord from 'lightning/uiRecordApi'
+
+export default MyLWC extend lightningElement{
+    @track ArrayLenght=[0];
+    @track recordsIds=[];
+    AccountFields=[AccountName,AccountPhone,AccountIndustry];
+
+    HandelAdd(){
+        const newRow=this.ArrayLenght.length;
+        this.ArrayLenght=[...this.ArrayLenght,newRow];
+    }
+    HandelSuccess(event){
+        const newRecordId= event.detail.id;
+        this.recordsIds=[...this.recordsIds,newRecordId];
+        alert('Record created'+newRecordId);
+    }
+
+    HandelDelete(){
+        if(this.recordIds.length >1){
+            const lastRecordid= this.recordIds[this.recordIds.length -1];
+
+            deleteRecord(lastRecordid)
+            .then(()=>{
+                this.recordsIds=this.recordsIds.slice(0,this.recordsIds.length -1);
+                this.ArrayLenght=this.ArrayLenght.slice(0,this.ArrayLenght.length -1);
+                 alert('Record Delete');
+            })
+            .catch(error=>{
+                 alert('Error While Creating Record'+error);
+            })
+            else{
+                 alert('Only One Row Cannot Delete');
+            }
+        }
+    }
+
+    get isDisabled(){
+        return this.recordIds.length ===0;
+    }
+}
+
+=================================================================
+<template>
+ <lightning-card titel="My Lwc">
+ <template if:true={ArrayLength}>
+    <template for:each={Arraylength} for:item="err" for:index={itemIndex}>
+      <div key={arr}>
+       <lightning-record-form 
+           object-api-name="Account" 
+           field={AccountFields} 
+           onsuccess={HanhelSuccess} 
+           columns="4">
+       </lightning-record-form>
+      </div>
+    </template>
+     <lightning-button label="Delete Button" disabled={isDisabled} onClick={HandelDelete} />
+   </template>
+     <lightning-button label="Add Button" onClick={HandelAdd} />
+ </lightning-card>
+</template>
+
+import {lightningElement,track} from 'lwc'
+import AccountName from '@salesforce/schema/Account.Name'
+import AccountPhone from '@salesforce/schema/Account.Phone'
+import AccountIndustry from '@salesforce/schema.Account.Industry'
+import deleteRecord from 'lightning/uiRecordApi'
+export default MyLwc extends LightlingElement{
+    @track ArrayLength=[0];
+    @track recordIds=[];
+    AccountFields=[AccountName,AccountPhone,AccountIndustry];
+
+    HandelAdd(){
+        const newRow=this.ArrayLength.length;
+        this.ArrayLength=[...this.ArrayLength,newRow];
+    }
+
+    HanhelSuccess(event){
+      const newRecordId= event.detail.id;
+      this.recordIds=[...this.recordIds,newRecordId];
+      alert('Record is Created '+newRecordId);
+    }
+
+    HandelDelete(){
+        if(this.recordIds.length > 1){
+            lastrecord = this.recordIds[this.recordIds.length -1];
+
+            deleteRecord(lastrecord)
+            .than(()=>{
+                this.recordIds= this.recordIds.slice(0,this.recordIds.length - 1);
+                this.ArrayLength=this.ArrayLength.slice(0,this.ArrayLength.length - 1);
+                alert('Record Deleted');
+            })
+            .catch(error=>{
+                alert('Error While Deleteing Record '+error);
+            })
+        }
+        else{
+            alert('One Row con Not Delete');
+        }
+    }
+
+    get isDisabled(){
+        return  this.recordIds.length === 0;
+    }
+}
+
+
+public class myHttpCls{
+    public static string getRecordbyId(string recordId){
+       string endpoint='xyz.com'
+
+       HttpRequest req= New HttpRequest();
+       req.setEndPoint(endpoint+'?recordId='+recordId);
+       req.setMethod('GET');
+       req.Header('content-type','Application/Json');
+       req.Header('Authroization','Barer MY_Token');
+       Http hp=new http();
+       HttpResponce res= hp.send(req);
+
+       if(res.getStatusCode == 200){
+         return json.stringify(req.getBody());
+       }
+       else
+       {
+        system.debug('Error code '+ res.getStatusCode);
+       }
+    }
+}
+
+recordId='xyz';
+recordData;
+async HandelClick(){
+     try{
+        this.recordData = await getRecordbyId(recordId : this.recordId);
+     }
+     catch(error){
+        console.log('Error'+error);
+     }
+   
+}
+
+=========================================
+
+TotalAmount__c on Accout and Amount__c  on contact
+
+trigger totalAmmount on Contact(After insert ,After Update)
+{
+    set<Id>accountIds= New set<Id>();
+
+    for(contact con:Trigger.New){
+        if(con.AccountId != Null && con.Amount__c != trigger.oldMap.get(con.Id).Amount__c){
+           accountIds.add(con.AccountId);
+        }
+    }
+
+    List<Contact> ContactList=[SELECT Id ,AccountId,Amount__c FROM Contact WHERE AccountId IN : accountIds];
+
+    map<Id,Decimal> AccountMap= New map<Id,Decimal>();
+
+    for(contact con:ContactList){
+        if(!AccountMap.containsKey(con.AccountId)){
+            AccountMap.put(con.AccountId,0);
+        }
+        else{
+            AccountMap.put(con.AccountId,AccountMap.get(con.AccountId) + con.Amount__c);
+        }
+    }
+    List<Account> AccountListUpdate=New List<Account>();
+     for(Id accId:AccountMap.KeySet()){
+        Account acc= New Account(Id= accId);
+        acc.TotalAmount__c=AccountMap.get(accId);
+        AccountListUpdate(acc);
+     }
+
+     if(!AccountListUpdate.isEmpty()){
+        Update AccountListUpdate;
+     }
+}
+
+
+==============================================================================
+Active__c field on Account if Account have No Activity last 180 day diActivate it;
+
+Public class myAccountDiactivate implements Database.batchable<sObject>{
+
+    public database.queryLocater start(Database.BatchableContext bc){
+        string query='SELECT Id ,Active__c,LastActivityDate FROM Account WHERE LastActivityDate < LAST_N_DAYS:180';
+        return database.getQueryLocater(query);
+    }
+
+    Public void execute(database.BatchableContext bc,list<Account> scop){
+         list<Account> AccountToUpdate=New list<Account>();
+        for(Account a:scop){
+            a.Active__c=false;
+            AccountToUpdate.add(a);
+        }
+
+        if(!AccountToUpdate.isEmpty()){Update AccountToUpdate;}
+    }
+    public void finish(Database.BatchableContext bc){
+
+    }
+}
+
+public class myShadulerCls implements Shaduleable{
+    public void execute(shaduleableContext sc){
+        myAccountDiactivate objAccDic= New myAccountDiactivate();
+        database.executeBatch(objAccDic);
+    }
+}
+string corn='0 0 0 0 * *';
+myShadulerCls sh= New myShadulerCls();
+system.shadule('my Shadule class',corn,sh);
+
+==================================================================================
+
+Trigger TotaloppAccount on Opportunity (After insert,After Update)
+{
+   set<Id>accId=New Set<Id>();
+
+   for(Opportunity opp:Trigger.New){
+    if(opp.Amount != Trigger.oldMap.get(opp.Id).Amount && opp.AccountId != Null){
+        accId.add(opp.AccountId);
+    }
+   }
+
+   List<Opportunity> oppList=[SELECT Id,Amount,AccountId FROM Opportunity WHERE AccountId IN : accId];
+
+   Map<Id,Decimal> AccountOppMap= New Map<Id,Decimal>();
+
+   for(Oppertunity op:oppList){
+    if(!AccountOppMap.containsKey(op.AccountId)){
+        AccountOppMap.put(op.AccountId,0);
+    }
+    else{
+        AccountOppMap.put(op.AccountId,AccountOppMap.get(op.AccountId) + op.Amount);
+    }
+   }
+   List<Account> AccountToUpdate= New List<Account>();
+   for(Id accountIds : AccountOppMap.keyset()){
+       Account accObj= New Account(Id = accountIds);
+       accObj.TotalAmount__c = AccountOppMap.get(accountIds);
+       AccountToUpdate.add(accObj);
+   }
+   if(!AccountToUpdate.isEmpty()){Update AccountToUpdate;}
+} 
+
+======================================================================
+
+trigger HighesOppAccount on Opportunity (after insert, after update) {
+    Set<Id> accId = new Set<Id>();
+
+    // Collect Account IDs from affected Opportunities
+    for (Opportunity opp : Trigger.New) {
+        if (opp.AccountId != null) {
+            if (Trigger.isInsert || (Trigger.isUpdate && opp.Amount != Trigger.oldMap.get(opp.Id).Amount)) {
+                accId.add(opp.AccountId);
+            }
+        }
+    }
+
+    if (accId.isEmpty()) {
+        return; // Exit if no relevant accounts are found
+    }
+
+List<AggregateResult> Aggr=[SELECT AccountId, MAX(Amount) maxAmount FROM Opportunity WHERE AccountId IN :accId GROUP BY AccountId];
+    Map<Id, Decimal> AccountMaxAmountMap = new Map<Id, Decimal>(); 
+    for (AggregateResult res :Aggr) {
+        AccountMaxAmountMap.put((Id) res.get('AccountId'), (Decimal) res.get('maxAmount'));
+    }
+
+    // Prepare Account records for update
+    List<Account> accountsToUpdate = new List<Account>();
+    for (Id accountId : AccountMaxAmountMap.keySet()) {
+        accountsToUpdate.add(new Account(Id = accountId, TotalAmount__c = AccountMaxAmountMap.get(accountId)));
+    }
+
+    // Update Accounts
+    if (!accountsToUpdate.isEmpty()) {
+        update accountsToUpdate;
+    }
+}
+
+==================================================
+
+trigger HightesOppAmount on Opportunity(After insert ,After Update){
+    set<Id>accountId= New Set<Id>();
+
+    for(Oppertunity oop:Trigger.New){
+        if(oop.AccountId != Null){
+            if(Trigger.isInsert || Trigger.isUpdate && oop.Amount != Trigger.oldMap.get(oop.Id).Amount){
+                accountId.add(oop.AccountId);
+            }
+        }
+    }
+
+    List<AggregatedResult> Agr=[SELECT Id,AccountId,MAX(Amount) maxAmount FROM Opportunity WHERE AccountId IN : accountId];
+     
+    map<Id,Decimal> AccountMap=New map<Id,Decimal>();
+
+    for(AggregatedResult ar:Agr){
+        AccountMap.put((Id) ar.get('AccountId'),(Decimal) ar.get('maxAmount'));
+    }
+
+    List<Account> AccountList=New List<Account>();
+    for(Id accId:AccountMap.keyset()){
+        Account accountRecord=New Account(Id=accId,Amount=AccountMap.get(accId));
+        AccountList.add(accountRecord);
+    }
+
+    if(!AccountList.isEmpty()){Update AccountList;}
+}
+
+======================================================================================================
+trigger AccHighestOpportunity on Opportunity (after insert, after update) {
+    
+    Map<Id, Opportunity> accountToHighestOpportunity = new Map<Id, Opportunity>();
+
+    for (Opportunity opp : Trigger.new) {
+        if (opp.AccountId != null && opp.Amount != null) {
+            if (!accountToHighestOpportunity.containsKey(opp.AccountId) || 
+                opp.Amount > accountToHighestOpportunity.get(opp.AccountId).Amount) {
+                accountToHighestOpportunity.put(opp.AccountId, opp);
+            }
+        }
+    }
+  
+    List<Account> accountsToUpdate = new List<Account>();
+    for (Id accountId : accountToHighestOpportunity.keySet()) {
+        Opportunity highestOpp = accountToHighestOpportunity.get(accountId);
+        Account acc = new Account(Id = accountId);
+        acc.Highest_Amount_Opportunity__c = highestOpp.Id; 
+        accountsToUpdate.add(acc);
+    }
+
+    if (!accountsToUpdate.isEmpty()) {
+        update accountsToUpdate;
+    }
+}
+==================================================================================
+trigger amxAmountOpp on opportunity(After insert,After update){
+    set<Id>accountId= new set<Id>();
+ 
+   for(Opportunity opp:Trigger.New){
+    if(opp.AccountId != Null){
+        if(Trigger.isInsert || Trigger.isUpdate & opp.Amount != trigger.oldMap(opp.Id).Amount){
+            accountId.add(opp.AccountId);
+        }
+    }
+   }
+
+   list<AggregatedResult> AggList=[SELECT Id,AccountId,MAX(Amount) maxAmount FORM Opportunity Where AccountId IN :accountId];
+   Map<Id,Decimal> AccMapOpp=New Map<Id,Decimal>();
+
+   for(AggregatedResult agr:AggList){
+     AccMapOpp.put((Id)agr.get('AccountId'),(Decimal)agr.get('maxAmount'));
+   }
+
+   List<account> accountList= New List<Account>();
+   for(Id accId:AccMapOpp.keyset()){
+     Account accounts= New Account(Id=accId,MaxAmount__c = AccMapOpp.get(accId));
+     accountList.add(accounts);
+   }
+   if(!accountList.isEmpty()){Update accountList;}
+}

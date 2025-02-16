@@ -1,0 +1,659 @@
+trigger AccPhoneCon on Account(After Update){
+    set<Id>accountids=new set<Id>();
+    for(Account acc:trigger.New){
+        if(acc.Phone != Trigger.oldMap.get(acc.id).Phone){
+            accountids.add(acc.id);
+        }
+    }
+
+    List<Contact>con =[SELECT id,AccountId from Contact WHERE AccountId IN : accountids];
+
+    for(Contact contacts:con){
+        contacts.Phone=Trigger.newMap.get(contacts.AccountId).Phone;
+    }
+    update con;
+}
+=======================================================================================
+Trigger countContact on Contact(After Insert,After Update,After Undelete){
+    set<Id>accountids=new set<Id>();
+    for(Contact con:trigger.New){
+        if(con.AccountId != Null){
+            accountids.add(con.AccountId);
+        }
+    }
+    List<Account>AccountstoUpdate=[SELECT Id,Desc from Account WHERE ID IN : accountids];
+
+    for(Account acc:AccountstoUpdate){
+        acc.Desc=acc.Contact.Size();
+    }
+    update AccountstoUpdate;
+}
+=================================================================================================
+Number_of_Cases__c
+Trigger AccountCaseCreate on Account(After Update){
+ set<Id>accIds=new set<Id>();
+
+ for(Account a: Trigger.New){
+    if(a.Number_of_Cases__c != Null && a.Number_of_Cases__c != Trigger.oldMap.get(a.id).Number_of_Cases__c){
+      accIds.add(a.id);
+    }
+ }
+
+ List<AggregateResult> Aggregated=[SELECT COUNT(Id) caseCount ,AccountId FROM Case 
+                                   WHERE AccountId IN :accIds
+                                   GROUP By AccountId];
+                            
+ Map<Id,Integer> AccountCaseMap=New Map<Id,Intager>();
+
+ for(AggregateResult agr:Aggregated){
+    AccountCaseCount.put((Id)agr.get('agr.AccountId'),(Integer)agr.get('agr.caseCount'));
+ }
+
+ List<Case>casetoCreate=new List<case>();
+
+ for(Account acc:Trigger.New){
+    Integer CaseCountNum= (AccountCaseCount.get(acc.Id)= Null ? AccountCaseCount.get(acc.Id) :0);
+    Integer Total = Number_of_Cases__c - CaseCountNum;
+
+    for(Integer i=0;i< Total;i++){
+        case cases=new Case(AccountId= acc.Id,status='New',Priority='low');
+        casetoCreate.add(cases);
+    }
+ }
+  if(!casetoCreate.isEmpty()){insert casetoCreate;}
+}
+=========================================================================================
+integer[] arr=new integer[]{2,3,4,5,2,3,4,6,7,8,7,2,6,3,4,2};
+
+Map<Integer,Integer> mapArr=New Map<Integer,Integer>();
+
+for(Insert i:ArrNum){
+    if(mapArr.containstKey(i)){
+        mapArr.put(mapArr.get(i),mapArr.get(i) + 1);
+    }
+    else {
+        mapArr.put(mapArr.get(i),1);
+    }
+}
+
+for(Integer num : mapArr.KeySet()){
+    system.debug(num +'='+ mapArr.get(num) +' Times' );
+}
+
+==================================================================================
+LWC
+
+P-to-c
+
+//c
+<template>
+  <p>Data From Account :{passedData}</p>
+</template>
+
+export default myChield extends LightlingElement{
+    @api passData;
+}
+
+// Parent
+<template>
+  <lightning-input label:"input Data" onChange:{HandelChange}/>
+  <my-chield passData={myData}></my-chield>
+</template>
+
+export default myParent extends LightlingElement{
+    myData='';
+    HandelChange(event){
+        this.myData=event.target.value;
+    }
+}
+
+======================
+c to P
+<template>
+  <lightning-input label="input Data" onChange={HandelChange}/>
+  <lightning-button label="Pass Data to Parent" onClick={HandelClick}>
+</template>
+
+export default myChield extend LightlingElement{
+    mychildData='';
+
+    HandelChange(event){
+        this.mychildData=event.target.value;
+    }
+
+    HandelClick(){
+        this.dispatchEvent(new CustomEvent("myevent",{
+            detail:this.mychildData;
+        }));
+    }
+}
+//p
+
+<template>
+ <p>Data from Child {childData}</p>
+
+ <my-chield onmyevent={HandelEvent}></my-chield>
+</template>
+
+export default myParent extend LightlingElement{
+    childData='';
+
+    HandelEvent(event){
+        this.childData=event.detail;
+    }
+ 
+}
+
+Q>Write a SOQL query to fetch the Opportunity record which has the second highest amount value.? 
+
+> SELECT Id, Name, Amount FROM Opportunity WHERE Amount != NULL  
+
+   ORDER BY Amount DESC LIMIT 1 OFFSET 1 
+
+ 
+
+Q> Can you write a SOQL that will return the sum of the amount of related opportunities per account basis? 
+
+> SELECT AccountId, SUM(Amount)  FROM Opportunity  GROUP BY AccountId 
+
+==================================================================================
+
+Opportunity related to Account ,Whenever Opportunity Email__c update 
+then Update all Opportunitys Related to that Account .
+
+Trigger AccountOppEmails on Opportunity (After insert,After Update){
+   Map<Id,string>  AccountOppMap=New  Map<Id,string>();
+    for(Oppertunity opp:Trigger.New){
+        if(opp.AccountId != Null && opp.Email__c ! = Null){
+            AccountOppMap.put(opp.AccountId,opp.Email__c);
+        }
+    }
+
+    List<Opportunity> OpportunityToUpdateList=[SELECT Id,Email__c,AccountId FROM Opportunity 
+                                                  WHERE AccountId IN :AccountOppMap.KeySet()];
+
+    List<Opportunity> OpportunityToUpdateEmail = New List<Opportunity>();
+    for(Opportunity op:OpportunityToUpdateList){
+        string UpdatedEmail=AccountOppMap.get(op.AccountId);
+       if(op.Email__c != UpdatedEmail){
+          op.Email__c=UpdatedEmail;
+          OpportunityToUpdateEmail.add(op);
+       } 
+    }
+
+    if(!OpportunityToUpdateEmail.isEmpty()){Update OpportunityToUpdateEmail;}
+   }
+    ==============================================================================================
+
+    trigger OppEmailAcc on Opportunity (After Update){
+
+     Map<Id,string>AccOppMap=new map<Id,string>();
+
+     for(Opportunity op:Trigger.new){
+        if(op.AccountId != Null && op.Email__c != Null){
+            AccOppMap.put(op.AccountId,op.Email__c);
+        }
+     }
+     List<Opportunity>oppList=[SELECT AccountId,Id,Email__c from Opportunity WHERE AccountId IN AccOppMap.KetSet()];
+     List<Opportunity>opportunitiesToUpdate=new List<opportunity>();
+     for(Opportunity opp: oppList){
+        if(opp.Email__c != AccOppMap.get(opp.AccountId)){
+            opp.Email__c=AccOppMap.get(opp.AccountId);
+            opportunitiesToUpdate.add(opp);
+        }
+     }
+        if(!OpportunityToUpdateEmail.isEmpty()){Update OpportunityToUpdateEmail;}
+    }
+    ====================================================================================================
+    trigger to automatically update the total_Amount_c field on the related Account whenever a 
+    Contact is created or its Amount_c field is updated.
+
+    Trigger totalAmount on Contact (After insert ,After Update){
+
+        set<Id>accountIds=new set<id>();
+        for(Contact con:Trigger.new){
+            if(con.AccountId != Null){
+                accountIds.add(con.AccountId);
+            }
+        }
+
+        List<Contact>ContactList=[SELECT id,AccountId,Amount_c from Contact WHERE AccountId IN : accountIds];
+
+        Map<Id,Decimal> TotalAmountMap= new Map<Id,Decimal>();
+
+        for(Contact contactTotat:ContactList){
+            if(contactTotat.AccountId != Null && contactTotat.Amount_c != Null){
+                if(!TotalAmountMap.containsKey(contactTotat.AccountId)){
+                   TotalAmountMap.put(contactTotat.AccountId,0);
+                }
+                else{
+                     TotalAmountMap.put((Id)contactTotat.AccountId,(Decimal)TotalAmountMap.get(contactTotat.AccountId) + con.Amount_c);
+                }
+            }
+        }
+        List<Account>accountToUpdate=new List<Account>();
+        for(Id accountIds : TotalAmountMap.KeySet()){
+            Account accounts = New Account(Id = accountIds);
+            accounts.total_Amount_c=TotalAmountMap.get(accountIds);
+            accountToUpdate(accounts);
+        }
+        if(!accountToUpdate.isEmpty()){Update accountToUpdate;}
+    }
+    =======================================================================================
+    Trigger EmailOpp on Opportunity(After Update){
+        Map<Id,String>AccountOppEmail=new Map<Id,String>();
+
+        for(Opportunity opp:Trigger.New){
+            if(opp.AccountId != Null && opp.Email_c != Trigger.oldMap.get(opp.Id).Email_c){
+                AccountOppEmail.put(opp.AccountId,opp.Email__c);
+            }
+        }
+
+        List<Opportunity> OppertunityList=[SELECT Id,Email__c from Oppertunity WHERE AccountId IN : AccountOppEmail.KeySet()];
+
+        List<Opportunity>OpportunityToUpdate=new List<Opportunity>();
+
+        for(Opportunity opportunities:OpportuintyList){
+            if(opportunities.Email__c != AccountOppEmail.get(opportunities.AccountId)){
+                opportunities.Email__c = AccountOppEmail.get(opportunities.AccountId);
+                OpportunityToUpdate.add(opportunities);
+            }
+        }
+         if(!OpportunityToUpdate.isEmpty()){Update OpportunityToUpdate;}
+    }
+    ==================================================================================================
+
+    Trigger AccountCaseCount on Account(Afer Insert,Afer Update){
+
+        set<Id>accId =new set<Id>();
+        for(Account acc:Trigger.New){
+            if(acc.Number_of_Cases__c != Null){
+                accId.add(acc.Id);
+            }
+        }
+
+        Map<Id,Integer> AccountCaseMap=New Map<Id,Integer>();
+
+        List<AggregateResule> AggregatedList=[SELECT AccountId,COUNT(Id) caseCount From Case WHERE AccountId IN : accId
+                                      GROUP By AccountId
+                                      ];
+
+        for(AggregateResult Aggregated:AggregatedList){
+            AccountCaseMap.put((Id)Aggregated.get('AccountId'),(Integer)Aggregated.get('caseCount'));
+        }
+
+        List<Case> NewCases=New List<Case>();
+        for(Account acc:Trigger.New){
+         integer numCases=AccountCaseMap.get(acc.Id) != Null ?AccountCaseMap.get(acc.Id) :0;
+         Integer TotalCase= numCases - acc.Number_of_Cases__c;
+
+         for(Integer i=0;i<TotalCase;i++){
+            Case cases= New Case(AccountId=acc.Id,);
+
+            NewCases.add(cases);
+         }
+        }
+
+        if(!NewCases.isEmpty){insert NewCases;}
+
+    }
+===============================================================================
+
+Email Update on Opportunity Update All Opportunity Email Related to that Account
+
+Trigger EmailOOP on Opportunity(After Update){
+    Map<Id,string>MapAccountWithEmail=New Map<Id,String>();
+
+    for(Opportunity opp:Trigger.New){
+        if(opp.Email_c != Null && Trigger.oldMap.get(opp.Id).Email_c){
+            MapAccountWithEmail.put(opp.AccountId,opp.Email_c);
+        }
+    }
+
+    List<Opportunity>OppListToUpdate=[SELECT Id,Email_c FROM Opportunity WHERE ID IN : MapAccountWithEmail.KeySet()];
+
+    for(Opportunity op:OppListToUpdate){
+        if(MapAccountWithEmail.containsKey(op.AccountId) && op.Email_c != MapAccountWithEmail.get(op.AccountId)){
+            op.Email_c=MapAccountWithEmail.get(op.AccountId);
+        }
+    }
+    if(!OppListToUpdate.isEmpty()){Update OppListToUpdate}
+}
+
+==========================================================================
+Account TotelAmount_c field Sum all Amount of Contact Amount_c field,whenever contact inserted or Updated add Amount_c to Account
+
+Trigger TotalAmount on Contact(After insert,After Update){
+    Set<Id>accountsId=New Set<Id>();
+
+    for(Contact con:Trigger.New){
+        if(con.AccountId != Null && con.Amount_c != Null){
+            accountsId.add(con.AccountId);
+        }
+    }
+
+    List<Contact> ContactList=[SELECT Id,Amount_c from Contact WHERE AccountId IN : accountIds];
+
+    Map<Id,Decimal>MapAccContactAmout=New Map<Id,Decimal>();
+
+    for(Contact con:ContactList){
+        if(!MapAccContactAmout.containsKey(con.AccountId)){
+            MapAccContactAmout.put(con.AccountId,0);
+        }
+        else{
+            MapAccContactAmout.put(con.AccountId,MapAccContactAmout.get(con.AccountId) + con.Amount_c);
+        }
+    }
+    
+    List<Account>AccountToUpdate=new List<Account>();
+    for(Id accId:MapAccContactAmout.KeySet()){
+        Account acc= new Account(Id = accId);
+        acc.TotalAmount_c = MapAccContactAmout.get(accId);
+        AccountToUpdate.add(acc);
+    }
+    
+    if(!AccountToUpdate.isEmpty()){Update AccountToUpdate;}
+}
+
+==================
+Contact Count on Account TotaclContact_C
+Trigger contactCount on Contact(After insert){
+    Set<Id>accountsId=New Set<Id>();
+
+    for(Contact con:Trigger.New){
+        if(con.AccountId != Null && con.Amount_c != Null){
+            accountsId.add(con.AccountId);
+        }
+    }
+
+    List<Account> acc=[SELECT id ,TotaclContact_c from Account Where ID IN : accountsId];
+      List<Account>AccountToUpdate=new List<Account>();
+    for(Account a:acc){
+       a.TotaclContact_C=a.Contact.Size();
+       AccountToUpdate.add(a);
+    }
+     if(!AccountToUpdate.isEmpty()){Update AccountToUpdate;}
+}
+
+=========================================================================================
+
+Trigger EmailUpdate on Opportunity(After Update){
+    Map<Id,String>accountids=new Map<Id,String>();
+
+    for(Opportunity op:Trigger.New){
+       if(op.AccountId != Null && op.Email__c != Trigger.oldMap.get(op.Id).Email__c){
+        accountids.put(op.AccountId,op.Email__c);
+       }
+
+       List<Opportunity> OpList=[SELECT Id,Email__c Form Opportunity WHERE AccountId IN : accountids.KeySet()];
+
+       for(Opportunity opp:OpList){
+        if(accountids.containsKey(op.AccountId) && opp.Email__c != accountids.get(opp.AccountId)){
+             opp.Email__c = accountids.get(opp.AccountId);
+             OpportunitysToUpdate.add(opp);
+        }
+        if(!opportunitiesToUpdate.isEmpty()){Update opportunitiesToUpdate;}
+       }
+    }
+}
+
+SOQL of Account No Contacts
+SELECT Id,Name FROM Account WHERE ID NOT IN (SELECT AccountId From Contact);
+
+SOQL Account With 1 Contact 
+SELECT AccountId,Account.Name FROM Contact GROUP By AccountId,Account.Name HAVING COUNT(Id) = 1
+
+SOQL Accounts With Noumbers of contacts
+SELECT AccountId,Account.Name,COUNT(Id) from Contact GROUP By AccountId,Account.Name 
+
+SOQL Opportunitys Highest Amount
+SELECT Id ,Amount,Name FROM Opportunity WHERE Amount != Null ORDER By Amount DESC LIMIT 1
+
+SOQL Opportunitys 2thHighest Amount 
+SELECT Id,Name,Amount From Opportunity WHERE Amount !=Null ORDER By Amount DESC LIMIT 1 OFFSET 1
+
+==================================================================================================
+
+contact count on Account 
+
+Trigger conCount on Contact(After Insert ,After Undelete){
+    set<Id> accountids= new set<Id>();
+    for(Contact con:Trigger.New){
+      if(con.AccountId != Null){accountids.add(con.AccountId)}
+    }
+
+    List<Account> accountList=[SELECT Id FROM Account WHERE ID IN : accountids];
+
+    for(Account acc:accountList){
+        acc.contactCount__c=acc.Contact.Size();
+    }
+    if(!accountList.isEmpty()){Update accountList;}
+}
+===========================================================
+Account Phone on Contact
+
+Trigger PhoneUpdate on Account(After Update){
+    Map<Id,String> accountidsEmail= new Map<Id,String>();
+    for(Account accounts:Trigger.New){
+      if(accounts.Email__c != Trigger.oldMap.get(accounts.Id).Email__c){
+        accountidsEmail.put(accounts.Id,accounts.Email__c);
+      }
+    }
+
+    List<Account> contactList=[SELECT Id,AccountId FROM Contact WHERE ID IN : accountidsEmail.KeySet()];
+
+    for(Contact contacts:contactList){
+        if(accountidsEmail.containsKey(contacts.AccountId) && contacts.Email__c != accountidsEmail.get(contacts.AccountId)){
+            contacts.Email__c = accountidsEmail.get(contacts.AccountId);
+        }
+    }
+     if(!contactList.isEmpty()){Update contactList;}
+}
+===========================================================================
+Account Case Create CaseCountNum
+
+Trigger AccountCase on Account(After Update,After Insert){
+ Map<Id,Integer> accountidNumCase= new Map<Id,Integer>();
+    for(Account accounts:Trigger.New){
+      if(accounts.CaseCount__c != Trigger.oldMap.get(accounts.Id).CaseCount__c){
+        accountidsEmail.put(accounts.Id,accounts.CaseCount__c);
+      }
+    }
+
+    List<AggregateResule> AgrList=[SELECT COUNT(Id) caseCount,AccountId FROM Case WHERE AccountId IN :accountidsEmail.KeySet()
+                                              GROUP By AccountId];
+
+    Map<Id,Integer> AccCaseCount=New Map<Id,Integer>();
+
+    for(AggregateResule agr:AgrList){
+        AccCaseCount.put((Id)agr.get('AccountId'),(Integer)agr.get('caseCount'));
+    }
+    List<Case> newCasesList=New List<Case>();
+    for(Account acc:Trigger.New){
+        Integer CaseCounter=(AccCaseCount.get(acc.Id) !=Null ? AccCaseCount.get(acc.Id):0);
+        Integer Total = acc.CaseCount__c - CaseCounter;
+        for(Integer i=0;i<Total;i++){
+            case newCases= New Case(AccountId=acc.Id,);
+            newCasesList.add(newCases);
+        }
+
+    }
+      if(!newCasesList.isEmpty()){Insert newCasesList;}
+}
+================================================================================================
+Account TotelAmount_c sum of all Contacts Amount_c whenever Contact Inserted or updated
+
+Trigger totalAmount on Contact(After Insert,After Update){
+    set<Id>accountids=New Set<Id>();
+
+    for(Contact con:Trigger.New){
+        if(con.Amount__c != Trigger.oldMap.get(con.Id).Amount__c){
+            accountids.add(con.AccountId);
+        }
+    }
+    List<Contact> ContactList=[SELECT ID ,AccountId,Amount__c from Contact WHERE AccountId IN : accountids];
+    Map<Id,Decimal> mapTotalAmount=New Map<Id,Decimal>();
+
+    for(Contact contacts:ContactList){
+        if(!mapTotalAmount.containsKey(contacts.AccountId)){
+            mapTotalAmount.put(contacts.AccountId,0);
+        }
+        else{
+            mapTotalAmount.put(contacts.AccountId,mapTotalAmount.get(contacts.AccountId) + Amount__c);
+        }
+    }
+
+    List<Account> AccountToUpdate=New List<Account>();
+    
+    for(Id accid:mapTotalAmount.KeySet()){
+        Account accounts= New Account();
+        accounts.Id = accId;
+        accounts.TotalAmount__c= mapTotalAmount.get(accId);
+        AccountToUpdate.add(accounts);
+    }
+    if(!AccountToUpdate.isEmpty()){Update AccountToUpdate;}
+}
+=========================================================================================================
+To write a trigger that assigns the ownership of records belonging to a deactivated user to their manager.
+
+trigger TransferOwnershipOnUserDeactivation on User (after update) {
+    // Collect IDs of deactivated users and map them to their managers
+    Map<Id, Id> userToManagerMap = new Map<Id, Id>();
+    for (User u : Trigger.new) {
+        User oldUser = Trigger.oldMap.get(u.Id);
+        // Check if the user was active and is now deactivated
+        if (!u.IsActive && oldUser.IsActive && u.ManagerId != null) {
+            userToManagerMap.put(u.Id, u.ManagerId);
+        }
+    }
+
+    // Exit if there are no deactivated users with managers
+    if (userToManagerMap.isEmpty()) {
+        return;
+    }
+
+    // Query records owned by the deactivated users
+    List<SObject> recordsToUpdate = new List<SObject>();
+    for (String objectName : new String[] {'Account', 'Contact', 'Opportunity'}) {
+        String query = 'SELECT Id, OwnerId FROM ' + objectName + ' WHERE OwnerId IN :userToManagerMap.keySet()';
+        List<SObject> records = Database.query(query);
+        for (SObject record : records) {
+            record.put('OwnerId', userToManagerMap.get((Id)record.get('OwnerId')));
+        }
+        recordsToUpdate.addAll(records);
+    }
+
+    // Update all collected records in a single DML statement
+    if (!recordsToUpdate.isEmpty()) {
+        update recordsToUpdate;
+    }
+}
+==========================================================================================
+Q)  Account TotelAmount_c field Sum all Amount of Contact Amount_c field,
+    whenever contact inserted or Updated add Amount_c to Account
+
+Trigger totalAmountCount on Contact(After Insert,After Update){
+    set<Id>accountIds= New set<Id>();
+
+    for(Contact con:trigger.New){
+        if(con.AccountId != Null){
+            accountIds.add(con.AccountId);
+        }
+    }
+    List<Contact>contactList=[SELECT Id,Amount__c From Contact WHERE ID IN : accountIds];
+
+    Map<Id,Decimal> AccountAmountMap= New Map<Id,Decimal>();
+
+    for(Contact contacts : contactList){
+        if(!AccountAmountMap.containsKey(contacts.AccountId)){
+            AccountAmountMap.put(contacts.AccountId,0);
+        }
+        else{
+            AccountAmountMap.put(contacts.AccountId,AccountAmountMap.get(contacts.AccountId) + contacts.Amount__c);
+        }
+    }
+    List<Account> updateAccount= New List<Account>();
+    for(Id accIds : AccountAmountMap.KeySet()){
+       Account accountNew = New Account(Id=accIds);
+       accountNew.TotalAmount__c = AccountAmountMap.get(accIds);
+       updateAccount.add(accountNew);
+    }
+    if(!updateAccount.isEmpty()){Update updateAccount;}
+}
+================================================================================
+
+HTTP 
+
+Public Class MyhttpCls{
+    Public static string getRecordshttp(string recordId){
+        string endpoint='xyz.com';
+
+        HttpRequest req= New HttpRequest();
+        req.setEndPoint(endpoint+'?recordId='+recordId);
+        req.setMethod('GET');
+        req.Header('content-Type','Application/json');
+        req.Header('Authorization','Barer Your_TOKEN');
+
+        Http hp=New Http();
+        HttpResponce res=hp.Send(req);
+
+        if(res.getStatusCode==200){
+            return json.stringify(res.getbody());
+        }
+        else{
+            console.log('Error '+res.getStatusCode);
+        }
+    }
+} 
+
+============================================================================================
+Trigger to update Opportunities to "Closed Lost" if CreatedDate is greater than 30 days and Stage is not "Closed Won"
+// this con-Not don by trigger Trigger only fire whenever particuler Record is inserdted  or Updated or Deleteed.
+
+in here we have to chach Records Older than 30 days we have to chack dayli Records which CreatedDate is > 30 days and Stage is not "Closed Won".
+
+i Create a Batch and Shadule it dayli basis
+
+Public Class myBatchCLS implements Database.Batchable<sObject>
+{
+    public databace.queryLocater start(database.BatchableContext bc){
+        string qur='SELECT Id,Name,stageName,CreatedDate FROM Opportunity WHERE CreatedDate < LAST_N_DAYS:30 AND StageName != 'Closed Won'';
+        return database.getQuearyLocater(qur);
+    }
+
+    public void execute(database.BatchableContaxt bc,List<Opportunity> scop){
+        List<Opportunity> oppToUpdate= New List<Opportunity>();
+      for(Opportunity oop:scop){
+        if(oop.stageName != 'Closed Won'){
+            oop.stageName ='Closed Lost';
+            oppToUpdate.add(oop);
+        }
+      }
+
+      if(!oppToUpdate.isEmpty()){Update oppToUpdate;}
+    }
+
+    Public void finish(database.BatchableContaxt bc){
+
+    }
+}
+
+public myShaduleCLS implements shaduleable{
+    myBatchCLS batchObj= new myBatchCLS();
+    databace.execute(batchObj);
+}
+string cron='0 0 0 * * ?'; // s ms hour day month year 
+myShaduleCLS shaduleObj = New myShaduleCLS();
+system.shadule('My Batch 30 days',corn,shaduleObj);
+
+
+======================================================================================================================================
+avoid double for loop ,Create a trigger on the Account object that updates a custom field Total_Opportunities__c on the Account 
+record whenever related Opportunities are added, updated, or deleted. 
+This custom field should store the sum of the Amount field of all related Opportunities with a StageName of 'Closed Won'.
+
+list<AggregateResult> AGR=[SELECT Id,Name,SUM(Amount) totelAmount,AccountId FROM Opportunity Where AccountId IN : accId 
+                                   AND StageName = 'Closed Own' GROUP by AccountId];
+                        
+=======================================================================================================================================
+

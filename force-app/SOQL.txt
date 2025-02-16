@@ -1,0 +1,101 @@
+Common Date and Time Clauses in SOQL:
+TODAY: Returns records that are on the current day.
+YESTERDAY: Returns records from the previous day.
+TOMORROW: Returns records from the next day.
+LAST_N_DAYS: Returns records within the last N days.
+NEXT_N_DAYS: Returns records within the next N days.
+THIS_WEEK, LAST_WEEK, NEXT_WEEK: Returns records for the current, previous, or next week.
+THIS_MONTH, LAST_MONTH, NEXT_MONTH: Returns records for the current, previous, or next month.
+ALL_TIME: Returns all records with any date field value.
+You can also use Date Literals to query based on relative dates without having to manually enter them.
+
+Date Literals in SOQL:
+LAST_N_DAYS:n: Returns records from the last N days.
+NEXT_N_DAYS:n: Returns records from the next N days.
+THIS_WEEK: Returns records from the current week.
+LAST_WEEK: Returns records from the previous week.
+NEXT_WEEK: Returns records for the next week.
+THIS_MONTH: Returns records from the current month.
+LAST_MONTH: Returns records from the previous month.
+NEXT_MONTH: Returns records for the next month.
+
+                           Examples
+1. Query for records with a date field that is today:
+SELECT Id, Name FROM Account WHERE CreatedDate = TODAY
+
+2. Query for records created in the last 7 days:
+SELECT Id, Name FROM Contact WHERE CreatedDate = LAST_N_DAYS:7
+
+3. Query for records created in last month:
+SELECT Id, Name FROM Opportunity WHERE CreatedDate = LAST_MONTH
+
+4. Query for records with a specific date range:
+SELECT Id, Name FROM Task WHERE ActivityDate >= 2025-01-01 AND ActivityDate <= 2025-01-31
+
+5. Query for records created next month:
+SELECT Id, Name FROM Account WHERE CreatedDate = NEXT_MONTH
+
+6. Query for records within the current week:
+SELECT Id, Name FROM Lead WHERE CreatedDate = THIS_WEEK
+
+7. Query for records from a specific time of day:
+SELECT Id, Name FROM Case WHERE LastModifiedDate = TODAY AND LastModifiedDate >= 2025-01-23T12:00:00Z
+
+This query will return all Accounts that were created in the last 5 days, including today.
+SELECT Id, Name, CreatedDate FROM Account WHERE CreatedDate = LAST_N_DAYS:5
+
+2. Retrieve Contacts updated in the last 30 days:
+SELECT Id, FirstName, LastName, LastModifiedDate FROM Contact WHERE LastModifiedDate = LAST_N_DAYS:30
+
+3. Get all Opportunities that were closed in the last 15 days:
+SELECT Id, Name, CloseDate FROM Opportunity WHERE CloseDate = LAST_N_DAYS:15
+
+4. Retrieve Cases created in the last 10 days
+SELECT Id, CaseNumber, CreatedDate FROM Case WHERE CreatedDate = LAST_N_DAYS:10
+================================================================================================================
+
+1> LastActivityDate
+2> CreatedDate
+3> CloseDate
+4> LastModifiedDate
+
+The < operator means the query is filtering for records where the LastActivityDate is older than 180 days,
+ i.e., no activity has occurred in the last 180 days.
+
+SELECT Id FROM Account WHERE LastActivityDate < LAST_N_DAYS:180.
+
+Retrieve an Account where Name is "Test" and have Multiple records with Same Name also filter by Name.
+SELECT COUNT(Id),Name from Account WHERE Name LIKE '%Test%' GROUP BY Name HAVING COUNT(Id) > 1 ORDER By Name
+
+SOQL return Account with no Contacts
+SELECT Id,Name From Account WHERE ID NOT IN (SELECT AccountId From contact)
+
+SOQL Account data With related Numbers of Contacts
+SELECT COUNT(Id) ,AccountId,Account.Name from Contact GROUP By AccountId,Account.Name
+
+SOQL Accounts Only 1 Related Contact
+SELECT AccountId,Account.Name from Contact GROUP By AccountId,Account.Name HAVING COUNT(Id) = 1
+
+SOQL to Highest Opportunity Amount
+SELECT Id,Name,Amount from Opportunity WHERE Amount != Null ORDER By Amount DESC LIMIT 1
+
+SOQL Account with Second Highest Oppertunity Amount
+SELECT AccountId,Id,Amount from Opportunity WHERE Amount != Null ORDER By Amount DESC LIMIT 1 OFFSET 1  
+
+write a query to get all the Account where more than one record exists with same name and name contains “test”
+SELECT Name,COUNT(Id)
+FROM Account
+WHERE Name LIKE '%test%' GROUP BY Name HAVING COUNT(Id) > 1 ORDER BY Name
+
+write a query to get all the Opportunities with id and name column 
+where opportunity name contains 'Test' and sort this list by Name
+SELECT Name,Id
+FROM Account
+WHERE Name LIKE '%test%' GROUP BY Name,Id ORDER BY Name 
+
+9. Fetch the Lead Record that are associate with each LeadSource that generated more
+than 10 times
+SELECT LeadSource, COUNT(Name) FROM Lead GROUP BY LeadSource Having Count(Name)>10
+
+6. Fetch the Latest Account Record
+SELECT Id, Name,CreatedDate FROM Account ORDER BY CreatedDate DESC
