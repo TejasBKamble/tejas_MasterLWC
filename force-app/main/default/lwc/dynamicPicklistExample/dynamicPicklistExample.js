@@ -32,3 +32,4 @@ export default class DynamicPicklistExample extends LightningElement {
         console.log('Selected Picklist Value:', event.target.value);
     }
 }
+//tejas

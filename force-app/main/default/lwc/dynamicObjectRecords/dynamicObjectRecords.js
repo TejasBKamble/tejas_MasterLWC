@@ -48,3 +48,4 @@ export default class DynamicObjectRecords extends LightningElement {
             });
     }
 }
+// tejas

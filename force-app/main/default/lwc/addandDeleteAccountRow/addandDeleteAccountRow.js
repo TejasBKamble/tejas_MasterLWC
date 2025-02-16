@@ -14,7 +14,7 @@ export default class AddandDeleteAccountRow extends LightningElement {
         const newIndex = this.ArrayLength.length;  // Calculate the new index
         this.ArrayLength = [...this.ArrayLength, newIndex];  // Add a new index to the array
     }
-
+   
     // Handler to handle success event when a record is created
     HandaleSuccess(event) {
         const newRecordId = event.detail.id;  // Get the record ID from the event

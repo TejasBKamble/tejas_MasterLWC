@@ -40,6 +40,6 @@ export default class Navgation extends NavigationMixin(LightningElement) {
                 c__recordId:this.selectedAccountId
             }
         });
-    }
+    } 
 
 }
