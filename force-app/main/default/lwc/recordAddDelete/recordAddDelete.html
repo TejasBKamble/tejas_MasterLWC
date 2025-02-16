@@ -1,0 +1,21 @@
+<template>
+    <lightning-card title="Record Insert">
+
+        <template if:true={arrayLength}>
+            <template for:each={arrayLength} for:item="arr" for:index="arrIndex">
+                <div key={arr}>
+                    <lightning-record-form 
+                    object-api-name="Account"
+                     fields={AFIELDS}
+                     onsuccess={HandelSuccess}
+                     columns="4">
+                    </lightning-record-form>
+                </div>
+            </template>
+        </template>
+        <template if:true={showDelete}>
+            <lightning-button label="Delete" onclick={handleDelete}></lightning-button>
+        </template>
+        <lightning-button label="Add Account" onclick={handelAdd}></lightning-button>
+    </lightning-card>
+</template>

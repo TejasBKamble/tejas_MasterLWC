@@ -1,0 +1,33 @@
+<template>
+    <lightning-card title="Accounts">
+        <!-- Data Table -->
+        <lightning-datatable
+            data={conData}
+            columns={columns}
+            key-field="Id"
+            onrowselection={handleRowSelection}
+            show-row-number-column>
+        </lightning-datatable>
+        
+        <!-- Display Selected ID -->
+        <template if:true={selectedID}>
+            <div class="slds-p-top_medium">
+                <p><strong>Selected Account ID:</strong> {selectedID}</p>
+            </div>
+        </template>
+        <template if:true={selectedRowsHandle}>
+            <template for:each={selectedRowsHandle} for:item="arr">
+                <div key={arr}>
+                    <p>Key = {arr}</p>
+                </div>
+            </template>
+        </template>
+        <!-- <template if:true={selectedRowsHandleArry}>
+            <template for:each={selectedRowsHandleArry} for:item="arr">
+                <div key={arr}>
+                    <p>KeyArray = {arr}</p>
+                </div>
+            </template>
+        </template> -->
+    </lightning-card>
+</template>

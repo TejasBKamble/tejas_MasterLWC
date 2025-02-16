@@ -1,0 +1,29 @@
+<template>
+    <lightning-card title="Accounts List" icon-name="standard:account">
+      <lightning-datatable
+        data={accounts.data}
+        columns={columns}
+        key-field="Id"
+        draft-values={draftValues}
+        onsave={handleSave}
+        onrowaction={handleEdit} 
+      >
+      </lightning-datatable>
+  
+      <!-- Conditional rendering of lightning-combobox for picklist editing -->
+      <template if:true={editingRecordId}>
+        <div class="slds-box slds-box_xx-small">
+          <lightning-combobox
+            name="industry"
+            label="Industry"
+            value={selectedIndustry}
+            options={industryPicklistValues}
+            onchange={handlePicklistChange}
+          ></lightning-combobox>
+          <lightning-button variant="neutral" label="Cancel" onclick={handleCancel}></lightning-button>
+          <lightning-button variant="brand" label="Save" onclick={handleSave}></lightning-button>
+        </div>
+      </template>
+    </lightning-card>
+  </template>
+  

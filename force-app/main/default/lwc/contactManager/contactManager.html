@@ -1,0 +1,17 @@
+<template>
+    <lightning-card title="Contact Manager" icon-name="custom:custom14">
+        <template if:true={contacts.length}>
+            <lightning-datatable
+                data={contacts}
+                columns={columns}
+                key-field="id"
+            ></lightning-datatable>
+        </template>
+        <template if:false={contacts.length}>
+            <p>No contacts added.</p>
+        </template>
+        
+        <lightning-button label="Add Contact" onclick={addContact}></lightning-button>
+        <lightning-button label="Delete Last Contact" onclick={deleteContact} disabled={isDeleteDisabled}></lightning-button>
+    </lightning-card>
+</template>

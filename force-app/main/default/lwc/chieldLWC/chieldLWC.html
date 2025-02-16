@@ -1,0 +1,19 @@
+<template>
+    <lightning-card title="Chield Bubble and Composed">
+        <lightning-button label="Pass Data to Grand-Prant" onclick={HandelClick}></lightning-button>
+    </lightning-card>
+    <lightning-card title="Form to JavaScript Example">
+        <div class="slds-p-around_medium">
+            <!-- Using template references to bind input values to component properties -->
+            <lightning-input label="Name" value={name} onchange={handleInputChange} data-id="name"></lightning-input>
+            <lightning-input label="Email" value={email} onchange={handleInputChange} data-id="email"></lightning-input>
+            <lightning-input label="Age" value={age} onchange={handleInputChange} data-id="age" type="number"></lightning-input>
+
+            <!-- Submit Button -->
+            <lightning-button label="Submit" onclick={handleSubmit}></lightning-button>
+
+            <!-- Output Result -->
+            <p if:true={result}>Result: {result}</p>
+        </div>
+    </lightning-card>
+</template>

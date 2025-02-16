@@ -1,0 +1,34 @@
+<template>
+    <lightning-card title="Record Form">
+        <template if:true={addArray}>
+            <template for:each={addArray} for:item="arr" for:index="arrindex">
+                <div key={arr}>
+                    <lightning-record-form
+                        object-api-name="Account"
+                        fields={fieldsArray}
+                        onsuccess={successHandler}
+                        columns="4">
+                    </lightning-record-form>
+                </div>
+            </template>
+        </template>
+
+        <!-- Add new record button -->
+        <lightning-button-icon
+            icon-name="utility:add"
+            alternative-text="Add"
+            class="slds-m-left_xx-small"
+            onclick={addclickHandler}>
+        </lightning-button-icon>
+
+        <!-- Delete button, shown when more than one record exists -->
+        <template if:true={showdelete}>
+            <lightning-button-icon
+                icon-name="utility:delete"
+                alternative-text="Delete"
+                class="slds-m-left_xx-small"
+                onclick={deleteclickHandler}>
+            </lightning-button-icon>
+        </template>
+    </lightning-card>
+</template>

@@ -1,3 +1,19 @@
+public class relatedContactOpportunities {
+
+	@AuraEnabled (cacheable=true)
+    public static List<Contact> getContactDetail(String recordId){
+		return [Select Name,LastName,FirstName,Phone,Email from Contact where AccountId=:recordId];
+	}
+    @AuraEnabled (cacheable=true)
+    public static List<Opportunity> getOppDetail(String recordId){
+		return [Select Name,StageName,CloseDate from Opportunity where AccountId=:recordId];
+	}
+    @AuraEnabled (cacheable=true)
+    public static List<Account> getAccName(String recordId){
+		return [Select Name from Account where Id=:recordId];
+	}
+}
+///////////// Controller Class 
 Parent HTML
 <template>
     <lightning-card title="Account Collection Header">

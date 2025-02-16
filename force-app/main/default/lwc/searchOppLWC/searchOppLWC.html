@@ -1,0 +1,8 @@
+<template>
+    <lightning-card title="Search Opportunity">
+        <lightning-input label="Search" onchange={HandelChange}></lightning-input>
+        <lightning-button label="Submit" onclick={HandelClick}></lightning-button>
+
+        <lightning-datatable key-field="Id" data={Records} columns={col}></lightning-datatable>
+    </lightning-card>
+</template>

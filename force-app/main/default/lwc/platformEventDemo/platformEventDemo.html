@@ -1,0 +1,76 @@
+<template>
+    <!-- Display a loading spinner while data is being fetched -->
+    <template if:true={data}>
+        <lightning-card title="Account Update Event">
+            <div class="slds-m-around_medium">
+                <lightning-datatable
+                    data={data}
+                    columns={columns}
+                    key-field="RecordId__c">
+                </lightning-datatable>
+            </div>
+            <p>Record_ID:{RecordId__c}</p>
+            <p>Record id:{recordId}</p>
+            <p>Name : {NameRC}</p>
+            <p>Email : {EmailRC}</p>
+        </lightning-card>
+    </template>
+
+   <!-- Tile Desigen Custom UI-->
+    <!-- Tile Design Custom UI for Name and Email -->
+    <div class="slds-m-top_medium slds-m-bottom_x-large">
+        <h2 class="slds-text-heading_medium slds-m-bottom_medium">
+            A tile component with an avatar.
+        </h2>
+
+        <!-- Display the tile only if NameRC exists -->
+        <template if:true={NameRC}>
+            <div class="slds-p-around_medium lgc-bg">
+                <lightning-tile label={NameRC} href="/bruce.html" type="media">
+                    <lightning-avatar 
+                        slot="media" 
+                        src="https://www.lightningdesignsystem.com/assets/images/avatar1.jpg" 
+                        fallback-icon-name="standard:person_account" 
+                        alternative-text="Bruce Wayne">
+                    </lightning-avatar>
+                    <ul class="slds-list_horizontal slds-has-dividers_right">
+                        <li class="slds-item">Name: {NameRC}</li>
+                        <li class="slds-item">Dark Knight</li>
+                    </ul>
+                </lightning-tile>
+            </div>
+        </template>
+
+        <!-- Display the tile only if EmailRC exists -->
+        <template if:true={EmailRC}>
+            <div class="slds-p-around_medium lgc-bg">
+                <lightning-tile label={EmailRC} href="/bruce.html" type="media">
+                    <lightning-avatar 
+                        slot="media" 
+                        src="https://www.lightningdesignsystem.com/assets/images/avatar1.jpg" 
+                        fallback-icon-name="standard:person_account" 
+                        alternative-text="Bruce Wayne">
+                    </lightning-avatar>
+                    <ul class="slds-list_horizontal slds-has-dividers_right">
+                        <li class="slds-item">Email: {EmailRC}</li>
+                        <li class="slds-item">Dark Knight</li>
+                    </ul>
+                </lightning-tile>
+            </div>
+        </template>
+    </div>
+
+    <!-- Loading spinner when data is being processed or awaiting subscription -->
+    <template if:false={data}>
+        <lightning-spinner alternative-text="Loading..." size="large"></lightning-spinner>
+    </template>
+
+    <!-- Tile Desigen Custom UI-->
+
+
+
+    <!-- Loading spinner when data is being processed or awaiting subscription -->
+    <template if:false={data}>
+        <lightning-spinner alternative-text="Loading..." size="large"></lightning-spinner>
+    </template>
+</template>

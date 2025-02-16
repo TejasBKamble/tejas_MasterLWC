@@ -1,0 +1,27 @@
+<template>
+    <lightning-card title="Delete Selected Account's.......">
+        <!-- Data Table to show Accounts -->
+        <lightning-datatable 
+            key-field="Id"
+            columns={columns}
+            data={accountData}
+            onrowselection={handleRowSelection}>
+        </lightning-datatable>
+
+        <!-- <div class="slds-grid">
+            <div class="slds-m-around_medium">
+              <lightning-button label="Previous" onclick={handlePreviousPage}></lightning-button>
+            </div>
+            <div class="slds-m-around_medium slds-col_bump-left">
+              <lightning-button label="Next" onclick={handleNextPage}></lightning-button>
+            </div>
+        </div> -->
+
+        <!-- Button to delete selected accounts -->
+        <!-- <lightning-button 
+            label="Delete Selected Accounts"
+            onclick={handleDelete} 
+            disabled={disabledDeleteButton}>
+        </lightning-button> -->
+    </lightning-card>
+</template>

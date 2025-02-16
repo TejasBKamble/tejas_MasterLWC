@@ -1,0 +1,28 @@
+<template>
+    <lightning-card title="Dynamic Object Records" icon-name="custom:custom63">
+        <div class="slds-p-around_medium">
+            <!-- Picklist for object selection -->
+            <lightning-combobox
+                name="objectPicklist"
+                label="Select Object"
+                placeholder="Select an object"
+                options={objectOptions}
+                value={selectedObject}
+                onchange={handleObjectChange}>
+            </lightning-combobox>
+        </div>
+
+        <!-- Data table to display records -->
+        <template if:true={records}>
+            <lightning-datatable
+                key-field="Id"
+                data={records}
+                columns={columns}
+                hide-checkbox-column>
+            </lightning-datatable>
+        </template>
+        <template if:false={records}>
+            <p class="slds-text-body_regular slds-m-around_medium">No records to display</p>
+        </template>
+    </lightning-card>
+</template>

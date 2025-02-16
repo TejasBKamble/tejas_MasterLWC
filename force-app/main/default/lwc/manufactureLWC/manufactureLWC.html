@@ -1,0 +1,16 @@
+<template>
+    <lightning-card title="Account List" icon-name="standard:account">
+        <lightning-button label="Open Account" onclick={openAccount} variant="brand"></lightning-button>
+
+        <template if:true={accounts}>
+            <lightning-datatable key-field="id" data={accounts} columns={columns} hide-checkbox-column="true"
+                onrowaction={handleRowAction}></lightning-datatable>
+        </template>
+        <!-- <template if:true={error}>
+            <c-error-panel errors={error}></c-error-panel>
+        </template> -->
+        <lightning-button onclick={handleClick} aria-haspopup="dialog" label="Open My Modal">
+        </lightning-button>
+        <p>Result: {Selectedrow}</p>
+    </lightning-card>
+</template>

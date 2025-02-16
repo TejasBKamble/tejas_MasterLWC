@@ -1,0 +1,28 @@
+<template>
+    <lightning-card title="Account Add and Delete">
+        <template if:true={ArrayLength}> Condition to chack Array Length
+            <template for:each={ArrayLength} for:item="arr" for:index="ArrIndex"> Loop through each element
+                <div key={arr}>
+                    <lightning-record-form 
+                        object-api-name="Account"
+                        fields={AccountsFieldas}
+                        columns="4"
+                        onsuccess={HandaleSuccess}> Record form to create Account Record 
+                    </lightning-record-form>
+                </div>
+            </template>   
+            <lightning-button      
+                label="Delete" 
+                onclick={HandelDelete} 
+                disabled={isDeleteButtonDisabled}> Disable the delete button if there are no records to delete
+            </lightning-button>
+        </template>
+        <lightning-button 
+            label="Add" 
+            onclick={HandelAdd}>
+        </lightning-button>
+    </lightning-card>
+</template>
+
+
+           

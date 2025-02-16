@@ -1,0 +1,19 @@
+<template>
+    <lightning-card title="Create Account and Generate PDF" icon-name="standard:account">
+        <div class="slds-p-horizontal_medium">
+            <!-- Account Data Form -->
+            <lightning-input label="Account Name" value={accountName} onchange={handleInputChange} data-id="accountName"></lightning-input>
+            <lightning-input label="Account Description" value={accountDescription} onchange={handleInputChange} data-id="accountDescription"></lightning-input>
+
+            <!-- Stylesheet Selector -->
+            <lightning-combobox
+                label="Select Stylesheet"
+                value={selectedStyleSheet}
+                options={stylesheetOptions}
+                onchange={handleStyleSheetChange}>
+            </lightning-combobox>
+
+            <lightning-button variant="brand" label="Generate PDF" onclick={handleGeneratePDF}></lightning-button>
+        </div>
+    </lightning-card>
+</template>

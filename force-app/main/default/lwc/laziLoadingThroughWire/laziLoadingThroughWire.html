@@ -1,0 +1,19 @@
+<template>
+    <lightning-button label="Load Accounts" onclick={handleLoadData}></lightning-button>
+
+    <template if:true={accounts}>
+        <ul>
+            <template for:each={accounts} for:item="account">
+                <li key={account.Id}>{account.Name} - {account.Industry}</li>
+            </template>
+        </ul>
+    </template>
+
+    <template if:true={error}>
+        <p>{error}</p>
+    </template>
+
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </template>
+</template>

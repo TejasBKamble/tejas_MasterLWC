@@ -1,0 +1,26 @@
+<template>
+    <lightning-card title="Generate PDF for Account" icon-name="standard:account">
+        <div class="slds-p-horizontal_medium">
+            <!-- Account Information -->
+           <lightning-input label="Account Name" value={accountName} onchange={handleInputChange} data-id="accountName"></lightning-input>
+           <lightning-input label="Account Description" value={accountDescription} onchange={handleInputChange} data-id="accountDescription"></lightning-input>
+       
+            <!-- Stylesheet Picker (from Document object) -->
+            <lightning-combobox
+                label="Select Stylesheet"
+                value={selectedStyleSheet}
+                options={stylesheetOptions}
+                onchange={handleStyleSheetChange}>
+            </lightning-combobox>
+
+            <!-- Button to trigger PDF generation -->
+            <lightning-button variant="brand" label="Generate PDF" onclick={handleGeneratePDF}></lightning-button>
+
+            <!-- Display PDF after generation -->
+            <template if:true={pdfUrl}>
+                <!-- <lightning-file-viewer file-id={fileId}></lightning-file-viewer> -->
+                 <p>File Generated Yoyo :</p>
+            </template>
+        </div>
+    </lightning-card>
+</template>

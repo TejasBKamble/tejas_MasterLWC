@@ -1,0 +1,19 @@
+<template>
+    <lightning-card title="Contact List" icon-name="custom:custom14">
+        <lightning-input label="Last Name" value={lastName} onchange={handleLastNameChange}></lightning-input>
+        <lightning-input label="Phone" value={phone} onchange={handlePhoneChange}></lightning-input>
+        
+        <lightning-button label="Add Contact" onclick={addContact}></lightning-button>
+        
+        <template if:true={contacts.length}>
+            <lightning-datatable
+                data={contacts}
+                columns={columns}
+                key-field="id">
+                <template if:true={contacts.length}>
+                    <lightning-button label="Delete" onclick={handleDelete} data-id={contactId}></lightning-button>
+                </template>
+            </lightning-datatable>
+        </template>
+    </lightning-card>
+</template>

@@ -1,0 +1,31 @@
+<template>
+    <lightning-card title="Account Add and Delete">
+        <template if:true={ArrayLength}>
+            <template for:each={ArrayLength} for:item="arr" for:index="ArrIndex">
+                <div key={arr}>
+                    <lightning-record-form object-api-name="Account"
+                     fields={AccFielda}
+                     columns="4"
+                     onsuccess={HandaleSuccess}></lightning-record-form>
+                </div>
+            </template>
+            
+            <lightning-button 
+                label="Delete" 
+                onclick={HandelDelete} 
+                disabled={isDeleteButtonDisabled}>
+            </lightning-button>
+        </template>
+        <lightning-button label="Add" onclick={HandelAdd}></lightning-button>
+     </lightning-card>
+    
+    <!-- Data Table to display the records -->
+    <lightning-datatable
+        data={records}
+        columns={columns}
+        key-field="Id"
+        onrowaction={HandelDelete}
+    ></lightning-datatable>
+    
+   
+</template>

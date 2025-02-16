@@ -1,0 +1,50 @@
+<template>
+    <lightning-modal-header label="My Modal Heading"></lightning-modal-header>
+    <lightning-modal-body>
+        Content: {content}
+        <template if:true={showAccountForm}>
+        <lightning-record-form
+            record-id={content}
+            object-api-name="Account"
+            layout-type="Compact"
+            mode="edit"
+            columns="2"
+            onsuccess={handleSuccess}
+            onerror={handleError}>
+        </lightning-record-form>
+     </template>
+        <template if:true={showOrderForm}>
+            <lightning-card title="Create Order" icon-name="custom:custom63">
+                
+                <lightning-record-form
+                object-api-name="Order"
+                layout-type="Compact"
+                mode="edit"
+                columns="2"
+                onsuccess={handleOrderSuccess}
+                onerror={handleError}>
+                </lightning-record-form>
+
+            </lightning-card>      
+        </template>
+        <template if:true={showItemForm}>
+            <lightning-card title="Create Order" icon-name="custom:custom63">
+                
+                <lightning-record-form
+                object-api-name="Part__c"
+                layout-type="Compact"
+                mode="edit"
+                columns="2"
+                onsuccess={handleItemSuccess}
+                onerror={handleError}>
+                </lightning-record-form>
+
+            </lightning-card>      
+        </template>
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <lightning-button label="OK" onclick={handleOkay}></lightning-button>
+        <lightning-button label="Add New Order" onclick={showHandeler}></lightning-button>
+        <lightning-button label="Add Order Item" onclick={showItemHandeler}></lightning-button>
+    </lightning-modal-footer>
+</template>

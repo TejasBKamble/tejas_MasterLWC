@@ -1,0 +1,36 @@
+<template>
+    <lightning-card title="Record Creation (Bypass Validation)">
+        <div class="slds-m-around_medium">
+            <!-- Name input (required) -->
+            <lightning-input
+                label="Name"
+                value={NameField}
+                onchange={NameChange}
+                required>
+            </lightning-input>
+
+            <!-- Phone input (optional) -->
+            <lightning-input
+                label="Phone"
+                value={PhoneField}
+                onchange={PhoneChange}>
+            </lightning-input>
+
+            <!-- Email input (optional) -->
+            <lightning-input
+                label="Email"
+                value={EmailField}
+                onchange={EmailChange}>
+            </lightning-input>
+        </div>
+
+        <!-- Button to Trigger Record Insert -->
+        <div class="slds-m-around_medium">
+            <lightning-button
+                label="Create Account"
+                variant="brand"
+                onclick={handleInsert}>
+            </lightning-button>
+        </div>
+    </lightning-card>
+</template>
